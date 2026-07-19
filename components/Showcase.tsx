@@ -19,14 +19,12 @@ export default function Showcase() {
   return (
     <section id="demo" style={{ marginTop: 76 }}>
       <div data-reveal style={{ maxWidth: 660, marginBottom: 26 }}>
-        <div className="eyebrow">In practice</div>
-        <h2 className="h2">See it live on a creator&apos;s catalog.</h2>
+        <div className="eyebrow">The thing we&apos;re building</div>
+        <h2 className="h2">Here&apos;s what it&apos;ll look like.</h2>
         <p className="lede">
-          This is Backcat embedded on a dev educator&apos;s own site — 412 episodes turned into
-          answers fans can ask, right where their audience already is.{" "}
-          <span className="mono" style={{ fontSize: 13, color: "var(--dim)" }}>
-            (example)
-          </span>
+          A mockup of Backcat embedded on a creator&apos;s own site — right where their audience
+          already is. Dana isn&apos;t real and neither are her 412 episodes; we drew her so you can
+          see where this is going before we&apos;ve shipped it.
         </p>
       </div>
 
@@ -74,13 +72,17 @@ export default function Showcase() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 7,
-                fontSize: 11,
-                color: "var(--muted)",
+                fontSize: 10.5,
+                letterSpacing: 0.8,
+                color: "#E8B03E",
+                border: "1px solid rgba(232,176,62,0.35)",
+                borderRadius: 999,
+                padding: "3px 10px",
+                whiteSpace: "nowrap",
+                flex: "none",
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/backcat-mark-t.png" alt="" style={{ height: 15, width: "auto" }} />
-              Powered by Backcat
+              MOCKUP
             </span>
           </div>
 
@@ -122,7 +124,7 @@ export default function Showcase() {
                     Dana Okafor
                   </div>
                   <div className="mono" style={{ fontSize: 12, color: "var(--dim)" }}>
-                    @thecodecafe · 412 episodes · 42h indexed
+                    @thecodecafe · invented for this mockup
                   </div>
                 </div>
               </div>
@@ -301,7 +303,7 @@ export default function Showcase() {
 
               <div style={{ borderTop: "1px solid var(--line)", paddingTop: 18 }}>
                 <div className="label" style={{ letterSpacing: 1, marginBottom: 12 }}>
-                  Top gaps this week
+                  Top gaps this week · sample
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {gaps.map(([q, n]) => (

@@ -1,8 +1,9 @@
+// Promises for launch, not claims about today — the page has no numbers to back yet.
 const items = [
-  "Built creator-authorized",
+  "Creator-authorized by design",
   "Podcasts + YouTube",
-  "Open benchmarks",
-  "No number we didn't measure",
+  "Benchmarks published at launch",
+  "No number we haven't measured",
 ];
 
 export default function TrustStrip() {

@@ -29,6 +29,20 @@ export default function Nav() {
         >
           backcat
         </span>
+        <span
+          className="mono"
+          style={{
+            fontSize: 10.5,
+            letterSpacing: 1,
+            color: "#E8B03E",
+            border: "1px solid rgba(232,176,62,0.35)",
+            borderRadius: 999,
+            padding: "3px 9px",
+            textTransform: "uppercase",
+          }}
+        >
+          Pre-launch
+        </span>
       </div>
       <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 26 }}>
         {links.map((l) => (
@@ -41,7 +55,7 @@ export default function Nav() {
           className="btn-primary"
           style={{ fontSize: 13.5, padding: "10px 18px" }}
         >
-          Map my catalog
+          Join the waitlist
         </a>
       </div>
     </nav>

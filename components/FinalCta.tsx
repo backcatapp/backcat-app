@@ -63,10 +63,12 @@ export default function FinalCta() {
               color: "var(--ink)",
             }}
           >
-            Let the cat sit on your archive.
+            Be there when the cat wakes up.
           </h2>
           <p style={{ fontSize: 17, lineHeight: 1.5, color: "var(--muted)", margin: "0 0 28px" }}>
-            Connect a feed and get your map in minutes. The cat was consulted and had no notes.
+            We&apos;re building this now, in public, from day one. Leave your details and
+            we&apos;ll map your catalog before we open it to anyone else. The cat was consulted
+            and had no notes.
           </p>
           <WaitlistForm />
         </div>

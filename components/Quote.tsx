@@ -40,15 +40,15 @@ export default function Quote() {
             textWrap: "pretty",
           }}
         >
-          “I watched creators react to their own concept map like a mirror — not a feature demo.
-          That&apos;s when it clicked: the archive isn&apos;t content, it&apos;s an asset nobody
-          could see.”
+          “Every creator we talk to has hundreds of hours nobody can search. That&apos;s the bet
+          we&apos;re making: the archive isn&apos;t content, it&apos;s an asset nobody could see
+          yet. Now we go build the thing that shows it.”
         </p>
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/backcat-mark.png" alt="" style={{ height: 26, width: "auto" }} />
           <span className="mono" style={{ fontSize: 12.5, color: "var(--dim)" }}>
-            building backcat in public · day 14
+            building backcat in public · day 001
           </span>
         </div>
       </div>

@@ -125,7 +125,7 @@ export default function Hero() {
 
           <div className="hero-copy" style={{ position: "relative", maxWidth: "56%" }}>
             <div className="eyebrow" style={{ marginBottom: 22 }}>
-              GraphRAG over your catalog
+              GraphRAG over your catalog · in build
             </div>
             <h1
               className="display"
@@ -150,8 +150,9 @@ export default function Hero() {
                 margin: 0,
               }}
             >
-              Connect a podcast feed or channel. Every episode becomes one queryable archive — fans
-              ask anything and get answers in your own words, cited to the exact second.
+              We&apos;re building it now: connect a podcast feed or channel, and every episode
+              becomes one queryable archive — fans ask anything and get answers in your own words,
+              cited to the exact second. Get on the list and we&apos;ll map your catalog first.
             </p>
           </div>
 
@@ -166,10 +167,10 @@ export default function Hero() {
             }}
           >
             <a href="#start" className="btn-primary" style={{ fontSize: 14, padding: "14px 24px" }}>
-              Get started free
+              Join the waitlist
             </a>
             <a href="#demo" className="btn-ghost" style={{ fontSize: 15, padding: "14px 22px" }}>
-              See it live
+              See what we&apos;re building
             </a>
           </div>
         </div>
@@ -189,18 +190,18 @@ export default function Hero() {
         >
           <div
             className="mono"
-            style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, color: "#2FA68C" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, color: "#E8B03E" }}
           >
             <span
               style={{
                 width: 7,
                 height: 7,
                 borderRadius: 999,
-                background: "#2FA68C",
+                background: "#E8B03E",
                 animation: "bc-blink 2.2s infinite",
               }}
             />
-            INDEXING · LIVE
+            PIPELINE · IN BUILD
           </div>
           <div
             style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 44, margin: "14px 0" }}
@@ -220,7 +221,8 @@ export default function Hero() {
             ))}
           </div>
           <p style={{ fontSize: 13, lineHeight: 1.4, color: "var(--muted)", margin: 0 }}>
-            Every episode transcribed, chunked and graphed — automatically.
+            Every episode transcribed, chunked and graphed — automatically. That&apos;s the part
+            we&apos;re wiring up right now.
           </p>
         </div>
       </div>

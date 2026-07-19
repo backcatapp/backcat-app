@@ -12,10 +12,10 @@ export default function Features() {
     <section id="features" style={{ marginTop: 72 }}>
       <div data-reveal style={{ maxWidth: 640, marginBottom: 26 }}>
         <div className="eyebrow">Three owned assets</div>
-        <h2 className="h2">One catalog. Three things you own.</h2>
+        <h2 className="h2">One catalog. Three things you&apos;ll own.</h2>
         <p className="lede">
-          Not a chatbot toy — a content-intelligence layer that turns hundreds of hours nobody can
-          search into cited answers, a living map, and a plan.
+          Not a chatbot toy. We&apos;re building a content-intelligence layer that turns hundreds
+          of hours nobody can search into cited answers, a living map, and a plan.
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export default function Features() {
           >
             <div>
               <div className="label" style={{ marginBottom: 10 }}>
-                The Gap Report
+                The Gap Report · sample
               </div>
               <h3
                 className="display"

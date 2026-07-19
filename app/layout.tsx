@@ -24,9 +24,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "backcat — Your back catalog, answering.",
+  title: "backcat — Your back catalog, answering. (coming soon)",
   description:
-    "Connect a podcast feed or channel. Every episode becomes one queryable archive — fans ask anything and get answers in your own words, cited to the exact second.",
+    "We're building a content-intelligence layer for podcasters and creators: every episode becomes one queryable archive, cited to the exact second. Pre-launch — join the waitlist.",
 };
 
 export const viewport: Viewport = {

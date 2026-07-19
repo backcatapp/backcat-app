@@ -196,7 +196,7 @@ export default function MoreFeatures() {
               </svg>
             </div>
             <div className="mono" style={{ fontSize: 11.5, letterSpacing: 1, color: "var(--dim)" }}>
-              EVERY MONDAY
+              EVERY MONDAY · ONCE WE SHIP
             </div>
             <div style={{ position: "relative" }}>
               <h3
@@ -317,7 +317,7 @@ export default function MoreFeatures() {
               className="mono"
               style={{ position: "relative", fontSize: 11.5, letterSpacing: 1, color: "var(--dim)" }}
             >
-              FAITHFULNESS EVAL
+              FAITHFULNESS EVAL · PLANNED
             </div>
             <div
               style={{
@@ -354,7 +354,7 @@ export default function MoreFeatures() {
                 Open benchmarks
               </h3>
               <p style={{ fontSize: 13, lineHeight: 1.4, color: "var(--muted)", margin: 0 }}>
-                Grounded-only guardrail, evaluated every release.
+                Grounded-only guardrail. We&apos;ll publish the scores once there are scores.
               </p>
             </div>
           </div>

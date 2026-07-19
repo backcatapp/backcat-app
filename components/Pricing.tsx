@@ -2,12 +2,14 @@ export default function Pricing() {
   return (
     <section id="pricing" style={{ marginTop: 76 }}>
       <div data-reveal style={{ maxWidth: 640, marginBottom: 26 }}>
-        <div className="eyebrow">Pricing</div>
+        <div className="eyebrow">Planned pricing</div>
         <h2 className="h2" style={{ marginBottom: 10 }}>
           Priced as a tool, not a toy.
         </h2>
         <p className="lede">
-          One sponsored episode covers a year. Merchant of record handles VAT and invoices.
+          Where we&apos;re landing when we open the doors — nothing is charging yet. One sponsored
+          episode should cover a year. Join the waitlist and you&apos;ll get founding rates before
+          any of this goes live.
         </p>
       </div>
 
@@ -57,7 +59,7 @@ export default function Pricing() {
               className="btn-ghost"
               style={{ marginTop: 20, textAlign: "center", fontSize: 14, padding: 12 }}
             >
-              Start free
+              Join the waitlist
             </a>
           </div>
         </div>
@@ -102,7 +104,7 @@ export default function Pricing() {
                 borderRadius: 999,
               }}
             >
-              POPULAR
+              PLANNED
             </div>
             <div
               className="mono"
@@ -156,7 +158,7 @@ export default function Pricing() {
                 padding: 12,
               }}
             >
-              Choose Creator
+              Get founding rate
             </a>
           </div>
         </div>
@@ -208,7 +210,7 @@ export default function Pricing() {
               className="btn-ghost"
               style={{ marginTop: 20, textAlign: "center", fontSize: 14, padding: 12 }}
             >
-              Choose Pro
+              Join the waitlist
             </a>
           </div>
         </div>

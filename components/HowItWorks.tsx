@@ -49,10 +49,14 @@ export default function HowItWorks() {
   return (
     <section id="how" style={{ marginTop: 76 }}>
       <div data-reveal style={{ maxWidth: 640, marginBottom: 26 }}>
-        <div className="eyebrow">Live in minutes</div>
-        <h2 className="h2" style={{ margin: 0 }}>
+        <div className="eyebrow">How it&apos;ll work</div>
+        <h2 className="h2" style={{ marginBottom: 12 }}>
           Paste a URL. Watch it think. Share the page.
         </h2>
+        <p className="lede">
+          Four steps, and the whole thing should take less than a coffee. None of it exists yet —
+          this is the shape we&apos;re building toward.
+        </p>
       </div>
 
       <div className="grid g4">

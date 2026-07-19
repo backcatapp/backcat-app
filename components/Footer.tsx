@@ -1,3 +1,5 @@
+// Anything without a real destination is rendered as dimmed "soon" text rather
+// than a link that goes nowhere.
 const columns = [
   {
     title: "Product",
@@ -10,17 +12,17 @@ const columns = [
   {
     title: "Company",
     links: [
-      { href: "#", label: "Build log" },
-      { href: "#", label: "Benchmarks" },
-      { href: "#", label: "Docs" },
+      { href: null, label: "Build log" },
+      { href: null, label: "Benchmarks" },
+      { href: null, label: "Docs" },
     ],
   },
   {
     title: "Follow",
     links: [
-      { href: "#", label: "X / @backcat" },
-      { href: "#", label: "YouTube" },
-      { href: "#", label: "GitHub" },
+      { href: null, label: "X / @backcat" },
+      { href: null, label: "YouTube" },
+      { href: null, label: "GitHub" },
     ],
   },
 ];
@@ -59,8 +61,8 @@ export default function Footer() {
               maxWidth: 260,
             }}
           >
-            Your back catalog, answering. Cited answers, a living map, and a plan — from the work you
-            already made.
+            Your back catalog, answering. Cited answers, a living map, and a plan — from the work
+            you already made. In build, in public, starting now.
           </p>
         </div>
 
@@ -77,11 +79,29 @@ export default function Footer() {
             >
               {col.title}
             </span>
-            {col.links.map((l) => (
-              <a key={l.label} href={l.href} className="footlink">
-                {l.label}
-              </a>
-            ))}
+            {col.links.map((l) =>
+              l.href ? (
+                <a key={l.label} href={l.href} className="footlink">
+                  {l.label}
+                </a>
+              ) : (
+                <span
+                  key={l.label}
+                  style={{
+                    fontSize: 14,
+                    color: "var(--dim)",
+                    display: "inline-flex",
+                    alignItems: "baseline",
+                    gap: 7,
+                  }}
+                >
+                  {l.label}
+                  <span className="mono" style={{ fontSize: 10.5, letterSpacing: 0.5 }}>
+                    soon
+                  </span>
+                </span>
+              ),
+            )}
           </div>
         ))}
       </div>

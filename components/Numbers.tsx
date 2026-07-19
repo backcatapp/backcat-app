@@ -1,3 +1,9 @@
+const stats = [
+  { value: "0", count: true, label: "episodes indexed", note: "yours could be the first" },
+  { value: "1", count: true, label: "cat consulted", note: "he had no notes" },
+  { value: "001", count: false, label: "day, building in public", note: "follow along" },
+];
+
 export default function Numbers() {
   return (
     <section style={{ marginTop: 76 }}>
@@ -51,11 +57,24 @@ export default function Numbers() {
             letterSpacing: 1.5,
             color: "var(--muted)",
             textTransform: "uppercase",
-            marginBottom: 26,
+            marginBottom: 8,
           }}
         >
-          One catalog, measured
+          Nothing measured yet
         </div>
+        <p
+          style={{
+            position: "relative",
+            fontSize: 14,
+            lineHeight: 1.5,
+            color: "var(--dim)",
+            margin: "0 0 26px",
+            maxWidth: 520,
+          }}
+        >
+          We said we&apos;d never show a number we hadn&apos;t measured. So here&apos;s the honest
+          scoreboard on day one.
+        </p>
         <div
           className="numbers-grid"
           style={{
@@ -65,12 +84,8 @@ export default function Numbers() {
             gap: 24,
           }}
         >
-          {[
-            { count: "412", suffix: null, label: "episodes indexed" },
-            { count: "1942", suffix: null, label: "concepts mapped" },
-            { count: "42", suffix: "h", label: "of audio, queryable" },
-          ].map((n) => (
-            <div key={n.label}>
+          {stats.map((s) => (
+            <div key={s.label}>
               <div
                 className="display"
                 style={{
@@ -81,10 +96,12 @@ export default function Numbers() {
                   letterSpacing: -2,
                 }}
               >
-                <span data-count={n.count}>0</span>
-                {n.suffix && <span style={{ fontSize: 24, color: "var(--dim)" }}>{n.suffix}</span>}
+                {s.count ? <span data-count={s.value}>0</span> : s.value}
               </div>
-              <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0" }}>{n.label}</p>
+              <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0" }}>{s.label}</p>
+              <p className="mono" style={{ fontSize: 11.5, color: "var(--dim)", margin: "4px 0 0" }}>
+                {s.note}
+              </p>
             </div>
           ))}
           <div>
@@ -102,6 +119,9 @@ export default function Numbers() {
             </div>
             <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0" }}>
               to the cited second
+            </p>
+            <p className="mono" style={{ fontSize: 11.5, color: "var(--dim)", margin: "4px 0 0" }}>
+              the bar we&apos;re building to
             </p>
           </div>
         </div>
