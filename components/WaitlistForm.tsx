@@ -18,11 +18,19 @@ function SubmitButton() {
         border: "none",
         cursor: pending ? "wait" : "pointer",
         opacity: pending ? 0.75 : 1,
-        flex: "none",
       }}
     >
       {pending ? "Adding…" : "Map my catalog →"}
     </button>
+  );
+}
+
+function Optional() {
+  return (
+    <span className="mono" style={{ color: "var(--dim)", fontSize: 11, letterSpacing: 0.5 }}>
+      {" "}
+      · optional
+    </span>
   );
 }
 
@@ -31,10 +39,7 @@ export default function WaitlistForm() {
 
   return (
     <div style={{ maxWidth: 520 }}>
-      <form
-        action={formAction}
-        style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
-      >
+      <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* honeypot — hidden from people, catnip for bots */}
         <input
           type="text"
@@ -45,16 +50,59 @@ export default function WaitlistForm() {
           style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0 }}
         />
 
-        <input
-          type="email"
-          name="email"
-          required
-          autoComplete="email"
-          placeholder="you@yourshow.com"
-          aria-label="Email address"
-          className="waitlist-input"
-        />
-        <SubmitButton />
+        <div className="field">
+          <label className="field-label" htmlFor="wl-email">
+            Email
+          </label>
+          <input
+            id="wl-email"
+            type="email"
+            name="email"
+            required
+            autoComplete="email"
+            placeholder="you@yourshow.com"
+            className="waitlist-input"
+          />
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="wl-feed">
+            Your podcast or YouTube
+            <Optional />
+          </label>
+          <input
+            id="wl-feed"
+            type="text"
+            name="feed_url"
+            inputMode="url"
+            autoComplete="url"
+            placeholder="youtube.com/@yourshow or your RSS feed"
+            className="waitlist-input"
+          />
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="wl-question">
+            A question your audience keeps asking
+            <Optional />
+          </label>
+          <textarea
+            id="wl-question"
+            name="sample_question"
+            rows={2}
+            maxLength={500}
+            placeholder="“How do you handle cold-start?”"
+            className="waitlist-input waitlist-textarea"
+          />
+          <p className="field-hint">
+            We&apos;ll check your catalog for the answer — and show you where the gap is if there
+            isn&apos;t one.
+          </p>
+        </div>
+
+        <div>
+          <SubmitButton />
+        </div>
       </form>
 
       <p
