@@ -1,0 +1,30 @@
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+.next/
+out/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+
+# data / artifacts
+*.mp3
+*.m4a
+*.wav
+data/
+audio/
+
+# os / editor
+.DS_Store
+Thumbs.db
