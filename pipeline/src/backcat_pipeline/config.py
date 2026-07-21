@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql://backcat:backcat@localhost:5432/backcat"
     groq_api_key: str = ""
+    openai_api_key: str = ""
 
 
 settings = Settings()
@@ -25,6 +26,8 @@ _DEFAULTS: dict[str, Any] = {
     "daily_spend_limit_usd": 5.0,
     "model.asr": "whisper-large-v3-turbo",
     "asr_usd_per_audio_hour": 0.04,
+    "model.embedding.openai": "text-embedding-3-small",
+    "openai_embed_usd_per_mtok": 0.02,
     "max_job_attempts": 3,
 }
 

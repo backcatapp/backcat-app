@@ -6,7 +6,7 @@ import feedparser
 
 from .ids import det_id
 
-STAGES_DAY4 = ("download", "transcribe")
+STAGES = ("download", "transcribe", "chunk", "embed")
 
 
 def add_catalog(conn, rss_url: str) -> tuple[str, int]:
@@ -43,7 +43,7 @@ def add_catalog(conn, rss_url: str) -> tuple[str, int]:
             """,
             (episode_id, catalog_id, guid, entry.get("title", guid), enclosures[0]["href"], published),
         )
-        for stage in STAGES_DAY4:
+        for stage in STAGES:
             conn.execute(
                 """
                 INSERT INTO jobs (id, catalog_id, episode_id, stage)

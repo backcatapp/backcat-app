@@ -4,10 +4,12 @@ import time
 
 import typer
 
+from .chunking import chunk_episode
 from .config import get_config
 from .costs import SpendBlocked
 from .db import connect
 from .download import audio_path, download_episode
+from .embed import embed_episode
 from .rss import add_catalog
 from .transcribe import transcribe_episode
 
@@ -79,25 +81,39 @@ def _run_stage(catalog: str, stage: str, worker) -> None:
                 typer.echo(f"  {status} {episode_id} (attempt {attempts}): {exc}")
 
 
+def _catalog_of(conn, episode_id: str) -> str:
+    return conn.execute("SELECT catalog_id FROM episodes WHERE id = %s", (episode_id,)).fetchone()[0]
+
+
 @app.command()
 def run(catalog: str) -> None:
-    """Work through queued jobs for a catalog (by id or name): download, then transcribe."""
+    """Work through queued jobs for a catalog (by id or name), stage by stage."""
 
     def _download(conn, episode_id: str, audio_url: str) -> str:
         path = download_episode(episode_id, audio_url)
         return f"({path.stat().st_size >> 20}MB)"
 
     def _transcribe(conn, episode_id: str, audio_url: str) -> str:
-        catalog_row = conn.execute(
-            "SELECT catalog_id FROM episodes WHERE id = %s", (episode_id,)
-        ).fetchone()
         hours = transcribe_episode(
-            conn, catalog_id=catalog_row[0], episode_id=episode_id, path=audio_path(episode_id)
+            conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id,
+            path=audio_path(episode_id),
         )
         return f"({hours:.2f}h audio)"
 
+    def _chunk(conn, episode_id: str, audio_url: str) -> str:
+        n = chunk_episode(conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id)
+        return f"({n} chunks)"
+
+    def _embed(conn, episode_id: str, audio_url: str) -> str:
+        n, tokens = embed_episode(
+            conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id
+        )
+        return f"({n} chunks, {tokens} tokens)"
+
     _run_stage(catalog, "download", _download)
     _run_stage(catalog, "transcribe", _transcribe)
+    _run_stage(catalog, "chunk", _chunk)
+    _run_stage(catalog, "embed", _embed)
 
 
 @app.command()
