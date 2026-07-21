@@ -63,7 +63,7 @@ export default async function CatalogPage({ params }: { params: Promise<{ id: st
             return (
               <tr key={e.id}>
                 <td>
-                  {e.title}
+                  {isAdmin ? <a href={`/dashboard/episodes/${e.id}`}>{e.title}</a> : e.title}
                   {firstError && <div className="err">{firstError}</div>}
                 </td>
                 <td className="mono">{e.duration_s ? `${Math.round(Number(e.duration_s))}s` : "—"}</td>
