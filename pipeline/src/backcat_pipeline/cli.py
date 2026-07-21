@@ -1,6 +1,8 @@
-"""Ingest CLI. Day 4: add / run / status. Stages beyond transcribe arrive day 5+."""
+"""Ingest CLI: add / add-local / run / retry / status."""
 
+import shutil
 import time
+from pathlib import Path
 
 import typer
 
@@ -10,7 +12,8 @@ from .costs import SpendBlocked
 from .db import connect
 from .download import audio_path, download_episode
 from .embed import embed_episode
-from .rss import add_catalog
+from .ids import det_id
+from .rss import STAGES, add_catalog
 from .transcribe import transcribe_episode
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -25,6 +28,57 @@ def add(
     with connect() as conn:
         catalog_id, n, queued = add_catalog(conn, rss_url, limit=limit)
     typer.echo(f"catalog {catalog_id}: {n} episodes upserted, {queued} queued for processing")
+
+
+@app.command(name="add-local")
+def add_local(
+    audio_file: Path,
+    catalog: str = typer.Option(..., "--catalog", help="Catalog name to file this under"),
+    title: str = typer.Option(None, "--title", help="Episode title (default: file name)"),
+) -> None:
+    """Add a local audio file as an episode (e.g. a yt-dlp pull of your own video).
+
+    The file is copied into the audio store and the download stage is marked done;
+    transcribe/chunk/embed run as usual via `ingest run`.
+    """
+    if not audio_file.exists():
+        raise typer.BadParameter(f"{audio_file} does not exist")
+    with connect() as conn:
+        catalog_id = det_id("local:" + catalog)
+        conn.execute(
+            """
+            INSERT INTO catalogs (id, name, rss_url) VALUES (%s, %s, %s)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            (catalog_id, catalog, "local:" + catalog),
+        )
+        episode_id = det_id(catalog_id, audio_file.name)
+        conn.execute(
+            """
+            INSERT INTO episodes (id, catalog_id, guid, title, audio_url)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title
+            """,
+            (episode_id, catalog_id, audio_file.name, title or audio_file.stem, "file:" + str(audio_file)),
+        )
+        for stage in STAGES:
+            conn.execute(
+                """
+                INSERT INTO jobs (id, catalog_id, episode_id, stage) VALUES (%s, %s, %s, %s)
+                ON CONFLICT (episode_id, stage) DO NOTHING
+                """,
+                (det_id(episode_id, stage), catalog_id, episode_id, stage),
+            )
+        dest = audio_path(episode_id)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(audio_file, dest)
+        conn.execute(
+            "UPDATE jobs SET status = 'done', started_at = now(), finished_at = now() "
+            "WHERE episode_id = %s AND stage = 'download'",
+            (episode_id,),
+        )
+        conn.commit()
+    typer.echo(f"episode {episode_id} added to catalog '{catalog}' — now: ingest run \"{catalog}\"")
 
 
 def _claim_jobs(conn, catalog: str, stage: str, episode: str | None) -> list[tuple]:
