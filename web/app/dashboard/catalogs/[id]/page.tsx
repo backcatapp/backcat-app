@@ -73,12 +73,27 @@ export default async function CatalogPage({ params }: { params: Promise<{ id: st
                       <button className="btn-ghost">Transcribe</button>
                     </form>
                   ) : (
-                    jobs.map((j) => (
-                      <span key={j.stage} className={`chip ${j.status}`}>
-                        {j.stage}: {j.status}
-                        {j.attempts > 1 ? ` (${j.attempts})` : ""}
-                      </span>
-                    ))
+                    <>
+                      {jobs.map((j) => (
+                        <span key={j.stage} className={`chip ${j.status}`}>
+                          {j.stage}: {j.status}
+                          {j.attempts > 1 ? ` (${j.attempts})` : ""}
+                        </span>
+                      ))}
+                      {isAdmin && jobs.length > 0 && jobs.length < 5 && (
+                        <form
+                          action={queueEpisode.bind(null, e.id as string)}
+                          style={{ display: "inline-block", marginInlineStart: 6 }}
+                        >
+                          <button
+                            className="btn-ghost"
+                            title="Queue the stages this episode is missing (e.g. graph)"
+                          >
+                            + missing stages
+                          </button>
+                        </form>
+                      )}
+                    </>
                   )}
                 </td>
                 <td className="mono">${Number(e.cost).toFixed(4)}</td>
