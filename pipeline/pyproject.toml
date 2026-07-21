@@ -1,0 +1,24 @@
+[project]
+name = "backcat-pipeline"
+version = "0.1.0"
+description = "Backcat ingestion pipeline: RSS -> audio -> Whisper -> chunks -> embeddings -> graph"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.12",
+    "feedparser>=6.0",
+    "httpx>=0.27",
+    "psycopg[binary]>=3.2.10",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+]
+
+[project.scripts]
+ingest = "backcat_pipeline.cli:app"
+migrate = "backcat_pipeline.migrate:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/backcat_pipeline"]

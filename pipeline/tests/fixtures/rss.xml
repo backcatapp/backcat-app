@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Backcat Test Podcast</title>
+    <description>Two-episode fixture feed for pipeline e2e tests.</description>
+    <link>http://localhost:8765/</link>
+    <item>
+      <title>Episode 1: The timestamp is the product</title>
+      <guid isPermaLink="false">backcat-test-ep1</guid>
+      <pubDate>Mon, 20 Jul 2026 08:00:00 GMT</pubDate>
+      <enclosure url="http://localhost:8765/ep1.wav" length="667818" type="audio/wav"/>
+    </item>
+    <item>
+      <title>Episode 2: Honest absence</title>
+      <guid isPermaLink="false">backcat-test-ep2</guid>
+      <pubDate>Tue, 21 Jul 2026 08:00:00 GMT</pubDate>
+      <enclosure url="http://localhost:8765/ep2.wav" length="587128" type="audio/wav"/>
+    </item>
+  </channel>
+</rss>

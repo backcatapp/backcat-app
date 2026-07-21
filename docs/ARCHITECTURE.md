@@ -35,6 +35,7 @@ flowchart LR
 |---|---|---|
 | Web | Next.js + TypeScript on Vercel | Landing shipped day 2 |
 | Query API | **FastAPI** (`serve/`) on Railway | Runs the whole query path; SSE streamed **direct to the browser** (single CORS origin, no Vercel hop) |
+| Auth | **Keycloak** (Docker locally, committed realm export; Railway when the panel goes public) + Auth.js in web | Roles `admin/creator/fan`; pulled forward from v1.0 (day-4 decision); provider swappable behind the Auth.js seam |
 | Pipeline + eval | **Python** (≥3.10) | AI-ecosystem tooling; eval harness open-sources credibly |
 | ASR | Whisper large-v3-turbo on Groq | ~$0.04/audio-hour, word timestamps |
 | Embeddings | **Provider-switchable:** OpenAI `text-embedding-3-small` (default) ↔ self-hosted `bge-m3` (fallback) | See abstraction below |
@@ -61,7 +62,7 @@ Chunks are **time windows, not character counts**: 60–90s, 15s overlap, aligne
 
 - Vectors from different models are **not comparable** — a switch means re-embedding the catalog (re-index on demand is the mechanism). Cost is cents per catalog, so this is fine.
 - Every embedding row stores `model` + dimension; the pgvector column/index is per-model (1536 for 3-small, 1024 for bge-m3). Queries embed with the catalog's *active* model only.
-- Switch is **config/env per catalog** during MVP — the admin-panel toggle arrives in v1.0. bge-m3 also hedges vendor outage and unlocks multilingual catalogs later.
+- Switch is **per-catalog config**, editable in the minimal admin panel from day 4 (DB-backed `app_config`, DB → env precedence); the full creator-facing admin panel remains v1.0. bge-m3 also hedges vendor outage and unlocks multilingual catalogs later.
 
 ## 3. Graph schema (provenance-first)
 
@@ -83,7 +84,7 @@ Targets: first token ≤ [3.5]s p50 · citation within ±[15]s · hit@5 ≥ [0.8
 
 The whole query path runs in a **FastAPI service (`serve/`) on Railway** — same runtime as the Python retrieval stack, so no glue rewrite. The browser talks to it **directly over SSE** (single CORS origin); Next.js never proxies the stream, so no Vercel function timeout/streaming hop. Per-IP rate limiting lives here (counter in Postgres — no Redis) plus a **global daily spend kill-switch** for the public demo: an unauthenticated endpoint that calls Sonnet needs a budget fuse, not just per-IP limits.
 
-**App tables** (Postgres, `catalog_id` on each, defined day 1 so day 11–12 doesn't improvise them): `sessions` · `messages` · `questions` (asked + `unanswered` flag — feeds gap nodes and the v1.0 gap report) · `guardrail_events`.
+**App tables** (Postgres, `catalog_id` on each, defined day 1 so day 11–12 doesn't improvise them): `sessions` · `messages` · `questions` (asked + `unanswered` flag — feeds gap nodes and the v1.0 gap report) · `guardrail_events` · `app_config` (key/value; **DB → env fallback** precedence — spend caps, kill-switch, model switches; edited in the admin panel, read by pipeline + serve + web).
 
 **Concept map serving:** the explorer reads a **precomputed JSON snapshot per catalog** (built after graphing + clustering, CDN-cached) — never live Neo4j queries per visitor. Cheaper, meets the ≤[3]s render bar, and the public share page stays up even if Neo4j hiccups.
 

@@ -4,6 +4,8 @@ One line per decision, newest on top. If you find yourself re-debating something
 
 | Date | Decision | Why |
 |---|---|---|
+| Day 4 | Auth = **Keycloak** (roles `admin/creator/fan`), pulled forward from v1.0; web integrates via an Auth.js middleware seam so the provider stays swappable; runs in local Docker with a **committed realm export** (no console clicking), Railway only when the panel must be public | Authorities requirement = real roles; `serve/` later validates the same JWTs via JWKS; the seam caps blast radius if Keycloak ops eat sprint time |
+| Day 4 | Config authority = DB-backed **`app_config`** + minimal admin panel from day 4, superseding "env-only until v1.0"; precedence is **DB value → env fallback** everywhere (Python + web) | Spend caps, kill-switch, model/embedding switches, and ingestion controls become clickable without redeploys; creator-facing full admin panel stays v1.0 |
 | Day 3 | Query path served by **FastAPI `serve/`** on Railway; browser gets SSE **direct** (single CORS origin, no Next.js proxy); per-IP rate limit in Postgres + **daily spend kill-switch** on the public demo | No Vercel streaming hop/timeouts; guardrails live beside the Python retrieval stack; unauthenticated Sonnet endpoint needs a budget fuse |
 | Day 3 | App tables named day 1: `sessions` `messages` `questions` (+`unanswered` flag) `guardrail_events`, all with `catalog_id` | Chat, gap nodes, guardrail logging land day 11–12 without schema improvisation |
 | Day 3 | Deterministic chunk IDs (`hash(episode_id, start_ts)`) + upsert/`MERGE` semantics everywhere | Re-index and re-runs idempotent; no duplicate rows/nodes in Postgres or Neo4j |
