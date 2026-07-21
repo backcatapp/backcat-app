@@ -35,6 +35,9 @@ def add_local(
     audio_file: Path,
     catalog: str = typer.Option(..., "--catalog", help="Catalog name to file this under"),
     title: str = typer.Option(None, "--title", help="Episode title (default: file name)"),
+    source_url: str = typer.Option(
+        None, "--source-url", help="Public URL of the source (e.g. YouTube watch URL) for player deep links"
+    ),
 ) -> None:
     """Add a local audio file as an episode (e.g. a yt-dlp pull of your own video).
 
@@ -55,11 +58,13 @@ def add_local(
         episode_id = det_id(catalog_id, audio_file.name)
         conn.execute(
             """
-            INSERT INTO episodes (id, catalog_id, guid, title, audio_url)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title
+            INSERT INTO episodes (id, catalog_id, guid, title, audio_url, source_url)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title,
+                source_url = coalesce(EXCLUDED.source_url, episodes.source_url)
             """,
-            (episode_id, catalog_id, audio_file.name, title or audio_file.stem, "file:" + str(audio_file)),
+            (episode_id, catalog_id, audio_file.name, title or audio_file.stem,
+             "file:" + str(audio_file), source_url),
         )
         for stage in STAGES:
             conn.execute(

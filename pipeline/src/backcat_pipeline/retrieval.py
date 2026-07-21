@@ -20,12 +20,13 @@ class Hit:
     start_s: float
     end_s: float
     text: str
+    source_url: str | None = None
     channels: list[str] = field(default_factory=list)
     score: float = 0.0
 
 
 _SELECT = """
-    SELECT c.id, c.episode_id, e.title, c.start_s, c.end_s, c.text
+    SELECT c.id, c.episode_id, e.title, c.start_s, c.end_s, c.text, e.source_url
 """
 
 
@@ -46,7 +47,7 @@ def dense_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
     rows = conn.execute(
         _SELECT
         + f"""
-        , 1 - (emb.embedding <=> %s::vector) AS sim
+        , 1 - (emb.embedding <=> %s::vector) AS sim  -- noqa: sim must stay last
         FROM {embedder.table} emb
         JOIN chunks c ON c.id = emb.chunk_id
         JOIN episodes e ON e.id = c.episode_id
@@ -57,7 +58,10 @@ def dense_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
         (vec, catalog_id, vec, k),
     ).fetchall()
     # score = cosine similarity — the honest-absence confidence signal
-    return [Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5], score=float(r[6])) for r in rows]
+    return [
+        Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5], r[6], score=float(r[7]))
+        for r in rows
+    ]
 
 
 def keyword_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
@@ -72,7 +76,7 @@ def keyword_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
         """,
         (catalog_id, query, query, k),
     ).fetchall()
-    return [Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5]) for r in rows]
+    return [Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5], r[6]) for r in rows]
 
 
 def rrf_fuse(channels: dict[str, list[Hit]], k: int = 6) -> list[Hit]:

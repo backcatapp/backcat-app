@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { askStream, Source, ts } from "@/lib/ask";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { askStream, Source, ts, youtubeId } from "@/lib/ask";
 import "./askchat.css";
 
 type Answer = {
@@ -11,6 +11,8 @@ type Answer = {
   state: "thinking" | "streaming" | "done" | "absence" | "error";
   note?: string;
 };
+
+type Playing = { answerIdx: number; i: number } | null;
 
 /** Render answer text, replacing [n] markers with citation pills. */
 function AnswerText({
@@ -34,9 +36,16 @@ function AnswerText({
     const n = parseInt(m[1], 10);
     const src = sources.find((s) => s.i === n);
     if (src) {
+      const playable = !!youtubeId(src.source_url);
       parts.push(
-        <button key={key++} className="cite" title={src.episode} onClick={() => onCite(n)}>
-          <b>{n}</b> {ts(src.start_s)}
+        <button
+          key={key++}
+          className={`cite${playable ? " playable" : ""}`}
+          title={src.episode}
+          onClick={() => onCite(n)}
+        >
+          {playable && <span className="cite-play">▶</span>}
+          <b>{ts(src.start_s)}</b>
         </button>
       );
     } else {
@@ -53,6 +62,33 @@ function AnswerText({
   );
 }
 
+function Player({ source, onClose }: { source: Source; onClose: () => void }) {
+  const vid = youtubeId(source.source_url);
+  if (!vid) return null;
+  const start = Math.max(0, Math.floor(source.start_s));
+  return (
+    <div className="player">
+      <div className="player-head">
+        <span className="player-title">{source.episode}</span>
+        <span className="player-ts">
+          {ts(source.start_s)}–{ts(source.end_s)}
+        </span>
+        <button className="player-close" onClick={onClose} aria-label="Close player">
+          ✕
+        </button>
+      </div>
+      <div className="player-frame">
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${vid}?start=${start}&autoplay=1&rel=0`}
+          title={source.episode}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function AskChat({
   catalogId,
   placeholder = "Ask anything about this catalog…",
@@ -63,8 +99,8 @@ export default function AskChat({
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [flashed, setFlashed] = useState<number | null>(null);
-  const threadRef = useRef<HTMLDivElement>(null);
+  const [playing, setPlaying] = useState<Playing>(null);
+  const endRef = useRef<HTMLDivElement>(null);
 
   const patchLast = useCallback((patch: Partial<Answer> | ((a: Answer) => Partial<Answer>)) => {
     setAnswers((prev) => {
@@ -75,16 +111,18 @@ export default function AskChat({
     });
   }, []);
 
+  useEffect(() => {
+    if (busy) endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [answers.length, busy]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const question = input.trim();
     if (!question || busy) return;
     setInput("");
     setBusy(true);
+    setPlaying(null);
     setAnswers((prev) => [...prev, { question, text: "", sources: [], state: "thinking" }]);
-    requestAnimationFrame(() =>
-      threadRef.current?.scrollIntoView({ block: "end", behavior: "smooth" })
-    );
     try {
       await askStream(catalogId, question, {
         onSources: (sources) => patchLast({ sources, state: "streaming" }),
@@ -100,65 +138,103 @@ export default function AskChat({
     }
   };
 
-  const flashSource = (i: number) => {
-    setFlashed(null);
-    requestAnimationFrame(() => setFlashed(i));
+  const activate = (answerIdx: number, i: number) => {
+    const src = answers[answerIdx]?.sources.find((s) => s.i === i);
+    if (src && youtubeId(src.source_url)) {
+      setPlaying((p) => (p?.answerIdx === answerIdx && p.i === i ? p : { answerIdx, i }));
+      return true;
+    }
+    return false;
   };
 
   return (
     <div className="chat">
-      <div className="chat-thread" ref={threadRef}>
+      <div className="chat-thread">
         {answers.length === 0 && (
           <div className="chat-empty">
-            Answers come from the actual episodes — every claim cited to the second.
-            <br />
-            If it isn&apos;t covered, you&apos;ll be told honestly.
+            <div className="chat-empty-mark">
+              ask<span>·</span>anything
+            </div>
+            <p>
+              Answers come from the actual episodes — every claim cited to the exact second, with
+              the moment playable right here.
+            </p>
+            <div className="chat-empty-tags">
+              <span>grounded only</span>
+              <span>cited to the second</span>
+              <span>honest when not covered</span>
+            </div>
           </div>
         )}
-        {answers.map((a, idx) => (
-          <div key={idx} style={{ display: "contents" }}>
-            <div className="chat-q" dir="auto">
-              {a.question}
-            </div>
-            {a.state === "thinking" && (
-              <div className="chat-thinking" aria-label="thinking">
-                <i /> <i /> <i />
+        {answers.map((a, idx) => {
+          const playingSrc =
+            playing?.answerIdx === idx
+              ? a.sources.find((s) => s.i === playing.i) ?? null
+              : null;
+          return (
+            <div key={idx} style={{ display: "contents" }}>
+              <div className="chat-q" dir="auto">
+                {a.question}
               </div>
-            )}
-            {(a.state === "streaming" || a.state === "done") && (
-              <div className="chat-a">
-                <AnswerText
-                  text={a.text}
-                  sources={a.sources}
-                  streaming={a.state === "streaming"}
-                  onCite={flashSource}
-                />
-                {a.sources.length > 0 && a.state === "done" && (
-                  <div className="chat-sources">
-                    {a.sources.map((s) => (
-                      <div
-                        key={s.i}
-                        className={`chat-source${flashed === s.i && idx === answers.length - 1 ? " flash" : ""}`}
-                      >
-                        <span className="mono-ts">
-                          [{s.i}] {ts(s.start_s)}–{ts(s.end_s)}
-                        </span>
-                        <span>{s.episode}</span>
-                      </div>
-                    ))}
+              {a.state === "thinking" && (
+                <div className="chat-a chat-a-enter">
+                  <div className="chat-thinking" aria-label="thinking">
+                    <i /> <i /> <i />
+                    <span>searching the catalog…</span>
                   </div>
-                )}
-              </div>
-            )}
-            {a.state === "absence" && (
-              <div className="chat-absence">
-                <b>Not covered — honestly.</b>
-                {a.note}
-              </div>
-            )}
-            {a.state === "error" && <div className="chat-error">{a.note}</div>}
-          </div>
-        ))}
+                </div>
+              )}
+              {(a.state === "streaming" || a.state === "done") && (
+                <div className="chat-a chat-a-enter">
+                  <div className="chat-a-kicker">
+                    <span className="dotpulse" data-live={a.state === "streaming"} />
+                    cited answer
+                  </div>
+                  <AnswerText
+                    text={a.text}
+                    sources={a.sources}
+                    streaming={a.state === "streaming"}
+                    onCite={(i) => activate(idx, i)}
+                  />
+                  {playingSrc && <Player source={playingSrc} onClose={() => setPlaying(null)} />}
+                  {a.sources.length > 0 && a.state === "done" && (
+                    <div className="chat-sources">
+                      <div className="chat-sources-label">moments</div>
+                      {a.sources.map((s) => {
+                        const playable = !!youtubeId(s.source_url);
+                        const active = playingSrc?.i === s.i;
+                        return (
+                          <button
+                            key={s.i}
+                            className={`chat-source${active ? " active" : ""}`}
+                            onClick={() => activate(idx, s.i)}
+                            disabled={!playable}
+                          >
+                            <span className={`src-play${playable ? "" : " off"}`}>
+                              {playable ? "▶" : "•"}
+                            </span>
+                            <span className="mono-ts">
+                              {ts(s.start_s)}–{ts(s.end_s)}
+                            </span>
+                            <span className="src-ep">{s.episode}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+              {a.state === "absence" && (
+                <div className="chat-absence chat-a-enter">
+                  <b>Not covered — honestly.</b>
+                  {a.note}
+                </div>
+              )}
+              {a.state === "error" && <div className="chat-error">{a.note}</div>}
+            </div>
+          );
+        })}
+        <div ref={endRef} />
       </div>
       <form className="chat-form" onSubmit={submit}>
         <input
@@ -171,7 +247,7 @@ export default function AskChat({
           aria-label="Your question"
         />
         <button className="chat-send" disabled={busy || input.trim().length < 3}>
-          {busy ? "…" : "Ask"}
+          {busy ? <span className="send-busy" /> : "Ask"}
         </button>
       </form>
     </div>

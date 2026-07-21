@@ -92,7 +92,13 @@ def ask(catalog_id: str, body: AskBody, request: Request):
             yield _sse(
                 "sources",
                 [
-                    {"i": i, "episode": h.episode_title, "start_s": h.start_s, "end_s": h.end_s}
+                    {
+                        "i": i,
+                        "episode": h.episode_title,
+                        "start_s": h.start_s,
+                        "end_s": h.end_s,
+                        "source_url": h.source_url,
+                    }
                     for i, h in enumerate(hits, 1)
                 ],
             )

@@ -39,11 +39,13 @@ def add_catalog(conn, rss_url: str, limit: int | None = None) -> tuple[str, int,
             published = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
         conn.execute(
             """
-            INSERT INTO episodes (id, catalog_id, guid, title, audio_url, published_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, audio_url = EXCLUDED.audio_url
+            INSERT INTO episodes (id, catalog_id, guid, title, audio_url, published_at, source_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title,
+                audio_url = EXCLUDED.audio_url, source_url = EXCLUDED.source_url
             """,
-            (episode_id, catalog_id, guid, entry.get("title", guid), enclosures[0]["href"], published),
+            (episode_id, catalog_id, guid, entry.get("title", guid), enclosures[0]["href"],
+             published, entry.get("link")),
         )
         episodes.append((episode_id, published))
 

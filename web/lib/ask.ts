@@ -1,7 +1,30 @@
 export const SERVE_URL =
   process.env.NEXT_PUBLIC_SERVE_URL ?? "http://localhost:8000";
 
-export type Source = { i: number; episode: string; start_s: number; end_s: number };
+export type Source = {
+  i: number;
+  episode: string;
+  start_s: number;
+  end_s: number;
+  source_url?: string | null;
+};
+
+/** Extract a YouTube video id from watch/short/embed/youtu.be URLs. */
+export function youtubeId(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1) || null;
+    if (u.hostname.endsWith("youtube.com") || u.hostname.endsWith("youtube-nocookie.com")) {
+      if (u.searchParams.get("v")) return u.searchParams.get("v");
+      const m = u.pathname.match(/\/(embed|shorts|live)\/([\w-]{6,})/);
+      if (m) return m[2];
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
 
 export type AskEvents = {
   onSources: (sources: Source[]) => void;
