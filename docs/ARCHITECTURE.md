@@ -66,10 +66,10 @@ Chunks are **time windows, not character counts**: 30–45s with 10s overlap (co
 
 ## 3. Graph schema (provenance-first)
 
-Nodes: `Concept · Person · Resource · Episode · Chunk`.
-Edges: `MENTIONS · RECOMMENDS · RELATES_TO · PART_OF` — **every edge carries `(episode_id, start_ts)`**. No provenance, no edge.
+Nodes: `Concept · Person · Resource · Episode · Chunk` **+ `Category`** (added day 8: per-episode top-level themes — `(Episode)-[:ABOUT]->(Category)-[:INCLUDES {episode_id}]->(entity)` — the "episode in a few words" layer above detailed topics).
+Edges: `MENTIONED_IN {episode_id, start_s}` (as built; plan said MENTIONS) · `ABOUT/INCLUDES` · `PART_OF/IN_CATALOG` — **provenance on every extraction edge**. `RELATED_TO` is **derived from chunk co-occurrence at query time, never stored** — re-runs can't double-count (day-8 decision).
 
-Extraction: one structured-output pass per chunk with our own prompt → typed entities, relations, one-line claim summary. Batched, cached, cost logged. Then alias canonicalization (embedding-similarity candidates + LLM tie-break, merges logged and reversible) before Neo4j load. Community clustering (Leiden/Louvain) assigns theme clusters (day 12).
+Extraction as built (day 8): structured-output pass per **~5-min chunk window** (8 chunks/call — window batching neutralized the shorter-chunks cost concern), Haiku, cost logged (~$0.05–0.07/audio-hour incl. the category pass); a second per-episode call produces the Category hierarchy; idempotency = per-episode delete-then-rewrite + `MERGE` by uid. Still pending from plan: alias canonicalization (exact-name merge only today) and community clustering (day 12).
 
 ## 4. Query path
 
