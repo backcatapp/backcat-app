@@ -8,6 +8,7 @@ embedding_provider column picks the implementation.
 
 import httpx
 
+from . import joblog
 from .config import get_config, settings
 from .costs import ensure_spend_allowed, log_cost
 
@@ -74,6 +75,7 @@ def embed_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int]:
         return 0, 0
 
     total_tokens = 0
+    joblog.log(f"embedding {len(rows)} chunks")
     for i in range(0, len(rows), BATCH_SIZE):
         batch = rows[i : i + BATCH_SIZE]
         texts = [r[1] for r in batch]

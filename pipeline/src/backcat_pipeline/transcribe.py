@@ -12,6 +12,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from . import joblog
+
 import httpx
 
 from .config import get_config, settings
@@ -94,15 +96,19 @@ def transcribe_episode(conn, *, catalog_id: str, episode_id: str, path: Path) ->
         tmpdir = tempfile.TemporaryDirectory()
         parts = _segment(path, Path(tmpdir.name))
 
+    if len(parts) > 1:
+        joblog.log(f"audio over upload cap — split into {len(parts)} segments")
     words: list[dict] = []
     texts: list[str] = []
     total_duration = 0.0
     language = None
     try:
-        for part in parts:
+        for i, part in enumerate(parts, 1):
             # rough pre-check: estimate this part's cost from segment length before paying
             ensure_spend_allowed(conn, (SEGMENT_SECONDS / 3600) * rate)
             result = _groq_transcribe(part, model)
+            if len(parts) > 1:
+                joblog.log(f"segment {i}/{len(parts)} transcribed")
             offset = total_duration
             for w in result.get("words", []):
                 words.append({"w": w["word"], "s": round(w["start"] + offset, 3), "e": round(w["end"] + offset, 3)})

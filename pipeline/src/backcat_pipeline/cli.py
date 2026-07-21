@@ -6,6 +6,7 @@ from pathlib import Path
 
 import typer
 
+from . import joblog
 from .chunking import chunk_episode
 from .config import get_config
 from .costs import SpendBlocked
@@ -110,13 +111,16 @@ def _run_stage(catalog: str, stage: str, worker, episode: str | None = None) -> 
         for job_id, episode_id, audio_url in jobs:
             conn.execute(
                 "UPDATE jobs SET status = 'running', attempt_count = attempt_count + 1, "
-                "started_at = now(), error = NULL WHERE id = %s",
+                "started_at = now(), error = NULL, logs = '' WHERE id = %s",
                 (job_id,),
             )
             conn.commit()
+            joblog.set_current(job_id)
+            joblog.log(f"{stage} started")
             t0 = time.monotonic()
             try:
                 detail = worker(conn, episode_id, audio_url)
+                joblog.log(f"{stage} done in {time.monotonic() - t0:.1f}s {detail}")
                 conn.execute(
                     "UPDATE jobs SET status = 'done', finished_at = now() WHERE id = %s", (job_id,)
                 )
@@ -142,6 +146,8 @@ def _run_stage(catalog: str, stage: str, worker, episode: str | None = None) -> 
                 )
                 conn.commit()
                 typer.echo(f"  {status} {episode_id} (attempt {attempts}): {exc}")
+            finally:
+                joblog.set_current(None)
 
 
 def _catalog_of(conn, episode_id: str) -> str:
@@ -224,6 +230,15 @@ def worker(interval: int = typer.Option(10, "--interval", help="Poll seconds")) 
                 "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()",
                 (_json.dumps(datetime.now(timezone.utc).isoformat()),),
             )
+            # Reclaim zombies: a 'running' job whose process died stays running
+            # forever otherwise (workers only claim 'queued').
+            reclaimed = conn.execute(
+                "UPDATE jobs SET status = 'queued', "
+                "logs = coalesce(logs, '') || '[reclaimed: worker died mid-run]' || E'\\n' "
+                "WHERE status = 'running' AND started_at < now() - interval '15 minutes'"
+            ).rowcount
+            if reclaimed:
+                typer.echo(f"reclaimed {reclaimed} stale running job(s)")
             conn.commit()
             cats = [
                 r[0]

@@ -25,7 +25,7 @@ export default async function JobsPage({
 
   const jobs = await sql`
     SELECT j.id, j.stage, j.status, j.attempt_count, j.error, j.started_at, j.finished_at,
-           e.title AS episode, c.name AS catalog
+           j.logs, e.title AS episode, c.name AS catalog
     FROM jobs j
     JOIN episodes e ON e.id = j.episode_id
     JOIN catalogs c ON c.id = j.catalog_id
@@ -121,6 +121,26 @@ export default async function JobsPage({
                       error
                     </summary>
                     <p className="err" style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>{j.error}</p>
+                  </details>
+                )}
+                {isAdmin && j.logs && (
+                  <details
+                    open={j.status === "running"}
+                    style={{ marginTop: 4, maxWidth: 420 }}
+                  >
+                    <summary className="mono" style={{ fontSize: 11, color: "var(--dim)", cursor: "pointer" }}>
+                      logs
+                    </summary>
+                    <pre
+                      className="mono"
+                      style={{
+                        fontSize: 11, lineHeight: 1.7, color: "var(--muted)",
+                        whiteSpace: "pre-wrap", margin: "6px 0 0",
+                        borderInlineStart: "2px solid var(--line-2)", paddingInlineStart: 10,
+                      }}
+                    >
+                      {j.logs}
+                    </pre>
                   </details>
                 )}
               </td>

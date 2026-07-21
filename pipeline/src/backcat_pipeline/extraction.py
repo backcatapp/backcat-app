@@ -8,6 +8,7 @@ content's language — the graph speaks the creator's language.
 
 import anthropic as anthropic_sdk
 
+from . import joblog
 from .config import get_config, settings
 from .costs import ensure_spend_allowed, log_cost
 from .graph import sync_episode, write_categories, write_extraction
@@ -103,6 +104,8 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
 
     mentions: dict[tuple[str, str], set[str]] = {}
     total_tokens = 0
+    n_windows = (len(chunks) + WINDOW_CHUNKS - 1) // WINDOW_CHUNKS
+    joblog.log(f"extracting {len(chunks)} chunks in {n_windows} windows")
     for w in range(0, len(chunks), WINDOW_CHUNKS):
         window = chunks[w : w + WINDOW_CHUNKS]
         text = "\n\n".join(
@@ -135,7 +138,12 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
             cost_usd=(resp.usage.input_tokens * rate_in + resp.usage.output_tokens * rate_out)
             / 1_000_000,
         )
+        joblog.log(
+            f"window {w // WINDOW_CHUNKS + 1}/{n_windows}: "
+            f"{len(data.get('entities', []))} entities"
+        )
 
+    joblog.log(f"writing {len(mentions)} entities to graph")
     chunk_starts = {c[0]: float(c[1]) for c in chunks}
     n = write_extraction(
         catalog_id=catalog_id, episode_id=episode_id, mentions=mentions,
@@ -166,6 +174,7 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
         categories = {
             c["name"]: c["children"] for c in data.get("categories", []) if c.get("name")
         }
+        joblog.log(f"categorized into: {', '.join(list(categories)[:5])}")
         write_categories(catalog_id=catalog_id, episode_id=episode_id, categories=categories)
         total_tokens += resp.usage.input_tokens + resp.usage.output_tokens
         log_cost(
