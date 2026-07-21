@@ -14,7 +14,12 @@ function dur(start?: string | Date | null, end?: string | Date | null): string {
   return `${Math.floor(secs / 60)}m ${Math.round(secs % 60)}s`;
 }
 
-export default async function JobsPage() {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ episode?: string; catalog?: string }>;
+}) {
+  const { episode: episodeFilter, catalog: catalogFilter } = await searchParams;
   const session = await auth();
   const isAdmin = session?.roles?.includes("admin");
 
@@ -24,6 +29,8 @@ export default async function JobsPage() {
     FROM jobs j
     JOIN episodes e ON e.id = j.episode_id
     JOIN catalogs c ON c.id = j.catalog_id
+    WHERE (${episodeFilter ?? null}::text IS NULL OR j.episode_id = ${episodeFilter ?? null})
+      AND (${catalogFilter ?? null}::text IS NULL OR j.catalog_id = ${catalogFilter ?? null})
     ORDER BY
       CASE j.status WHEN 'running' THEN 0 WHEN 'failed' THEN 1 WHEN 'queued' THEN 2 ELSE 3 END,
       coalesce(j.finished_at, j.started_at) DESC NULLS LAST
@@ -45,6 +52,12 @@ export default async function JobsPage() {
     <>
       <AutoRefresh active={active} />
       <h1>Jobs</h1>
+      {(episodeFilter || catalogFilter) && jobs.length > 0 && (
+        <p className="dash-sub">
+          filtered to {episodeFilter ? <b dir="auto">{jobs[0].episode}</b> : <b>{jobs[0].catalog}</b>}{" "}
+          — <a href="/dashboard/jobs">show all</a>
+        </p>
+      )}
       <p className="dash-sub">
         Every pipeline stage as it runs — this table IS the queue.{" "}
         {workerAlive ? (

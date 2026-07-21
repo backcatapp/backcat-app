@@ -74,12 +74,18 @@ export default async function CatalogPage({ params }: { params: Promise<{ id: st
                     </form>
                   ) : (
                     <>
-                      {jobs.map((j) => (
-                        <span key={j.stage} className={`chip ${j.status}`}>
-                          {j.stage}: {j.status}
-                          {j.attempts > 1 ? ` (${j.attempts})` : ""}
-                        </span>
-                      ))}
+                      <a
+                        href={`/dashboard/jobs?episode=${e.id}`}
+                        title="Open in Jobs — details, durations, retry"
+                        style={{ color: "inherit" }}
+                      >
+                        {jobs.map((j) => (
+                          <span key={j.stage} className={`chip ${j.status}`}>
+                            {j.stage}: {j.status}
+                            {j.attempts > 1 ? ` (${j.attempts})` : ""}
+                          </span>
+                        ))}
+                      </a>
                       {isAdmin && jobs.length > 0 && jobs.length < 5 && (
                         <form
                           action={queueEpisode.bind(null, e.id as string)}
