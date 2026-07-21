@@ -4,6 +4,7 @@ One line per decision, newest on top. If you find yourself re-debating something
 
 | Date | Decision | Why |
 |---|---|---|
+| Day 6 | Fan identity strategy: **anonymous sessions first** (localStorage session_key, multi-turn at day 11), Keycloak `fan` accounts in v1.0 link sessions on first login | Login wall before first answer kills fan conversion; identity must buy the fan something, not be a toll booth |
 | Day 6 | Chunk windows shortened **60–90s → 30–45s** (10s overlap), config-driven via `app_config`; re-chunk = one re-index, cents per catalog | Player seeked to chunk start must land near the cited claim (±15s bar); UX beat theory; day-7 eval validates answer quality; extraction cost ~2x chunks — revisit before day 8 |
 | Day 5 | YouTube ingestion: **start with yt-dlp** (manual pull → `ingest add-local`, own/permitted content only), migrate to official OAuth path (captions + upload) in v1.0 | Official Data API can't download audio even with OAuth; unblocks testing now; creator-authorized principle still governs the hosted product path |
 | Day 4 | Auth = **Keycloak** (roles `admin/creator/fan`), pulled forward from v1.0; web integrates via an Auth.js middleware seam so the provider stays swappable; runs in local Docker with a **committed realm export** (no console clicking), Railway only when the panel must be public | Authorities requirement = real roles; `serve/` later validates the same JWTs via JWKS; the seam caps blast radius if Keycloak ops eat sprint time |
