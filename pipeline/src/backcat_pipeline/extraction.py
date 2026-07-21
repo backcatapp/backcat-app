@@ -115,10 +115,15 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
         ensure_spend_allowed(conn, est)
         resp = client.messages.create(
             model=model,
-            max_tokens=1500,
+            max_tokens=3000,
             output_config={"format": {"type": "json_schema", "schema": _SCHEMA}},
             messages=[{"role": "user", "content": _PROMPT.format(window=text)}],
         )
+        if resp.stop_reason == "max_tokens":
+            raise RuntimeError(
+                f"extraction window {w // WINDOW_CHUNKS + 1} truncated at max_tokens — "
+                "raise max_tokens or shrink WINDOW_CHUNKS"
+            )
         import json
 
         data = json.loads(next(b.text for b in resp.content if b.type == "text"))
@@ -157,11 +162,15 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
         title = conn.execute(
             "SELECT title FROM episodes WHERE id = %s", (episode_id,)
         ).fetchone()[0]
-        names = sorted({name for name, _ in mentions})
-        ensure_spend_allowed(conn, 0.002)
+        # Long episodes can yield 150+ entities; the response echoes every name
+        # into children arrays, so cap the list and size max_tokens to fit —
+        # a truncated JSON here failed a real 87-min episode (150 entities).
+        by_mentions = sorted(mentions.items(), key=lambda kv: -len(kv[1]))
+        names = sorted({name for (name, _), _ in by_mentions[:120]})
+        ensure_spend_allowed(conn, 0.005)
         resp = client.messages.create(
             model=model,
-            max_tokens=1200,
+            max_tokens=6000,
             output_config={"format": {"type": "json_schema", "schema": _CAT_SCHEMA}},
             messages=[
                 {
@@ -170,6 +179,8 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
                 }
             ],
         )
+        if resp.stop_reason == "max_tokens":
+            raise RuntimeError("category pass truncated at max_tokens — raise the cap")
         data = json.loads(next(b.text for b in resp.content if b.type == "text"))
         categories = {
             c["name"]: c["children"] for c in data.get("categories", []) if c.get("name")
