@@ -6,13 +6,19 @@ Env var name for key "daily_spend_limit_usd" is DAILY_SPEND_LIMIT_USD, etc.
 
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# pipeline/.env, found regardless of the process cwd (serve/ imports this too)
+_PIPELINE_ENV = Path(__file__).resolve().parents[2] / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(".env", str(_PIPELINE_ENV)), env_file_encoding="utf-8", extra="ignore"
+    )
 
     database_url: str = "postgresql://backcat:backcat@localhost:5432/backcat"
     groq_api_key: str = ""
@@ -35,6 +41,7 @@ _DEFAULTS: dict[str, Any] = {
     "model.answering": "claude-sonnet-5",
     "answering_usd_per_mtok_in": 3.0,
     "answering_usd_per_mtok_out": 15.0,
+    "rate_limit.questions_per_hour": 20,
     "max_job_attempts": 3,
 }
 

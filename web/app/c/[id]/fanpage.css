@@ -1,0 +1,118 @@
+.fan {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.fan-inner {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.fan-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+}
+
+.fan-wordmark {
+  font-family: var(--font-bricolage), sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.fan-wordmark span {
+  color: var(--orange);
+}
+
+.fan-live {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fan-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2fa68c;
+}
+
+.fan-hero {
+  padding: 48px 0 36px;
+  text-align: center;
+}
+
+.fan-kicker {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 14px;
+}
+
+.fan-hero h1 {
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: clamp(30px, 5.4vw, 44px);
+  font-weight: 800;
+  line-height: 1.12;
+  margin: 0 0 14px;
+  letter-spacing: -0.015em;
+}
+
+.fan-hero h1 em {
+  color: var(--orange);
+  font-style: normal;
+}
+
+.fan-hero p {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.fan-stats {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 22px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.fan-chat {
+  flex: 1;
+  padding-bottom: 24px;
+}
+
+.fan-foot {
+  padding: 20px 0 28px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.fan-foot a {
+  color: var(--muted);
+}
+
+.fan-foot a:hover {
+  color: var(--orange);
+}

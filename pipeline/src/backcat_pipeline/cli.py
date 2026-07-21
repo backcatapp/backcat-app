@@ -230,23 +230,26 @@ def search(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
 @app.command()
 def ask(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
     """Grounded, cited answer streamed to the terminal (Claude, grounded-only)."""
-    from .answering import _ts, ask_stream
+    from .answering import _ts, log_question, retrieve, stream_answer
 
     with connect() as conn:
         catalog_id = _resolve_catalog(conn, catalog)
-        gen = ask_stream(conn, catalog_id=catalog_id, query=query, k=k)
-        hits = None
+        hits, confidence, covered = retrieve(conn, catalog_id=catalog_id, query=query, k=k)
+        log_question(
+            conn, catalog_id=catalog_id, question=query, answered=covered, confidence=confidence
+        )
+        if not covered:
+            conn.commit()
+            typer.echo("not covered by this catalog (honest absence) — question logged as a gap")
+            return
+        gen = stream_answer(conn, catalog_id=catalog_id, query=query, hits=hits)
         try:
             while True:
                 typer.echo(next(gen), nl=False)
-        except StopIteration as done:
-            hits, _usage = done.value
+        except StopIteration:
+            pass
         conn.commit()
-    typer.echo("")
-    if not hits:
-        typer.echo("not covered by this catalog (honest absence) — question should be logged")
-        return
-    typer.echo("\nsources:")
+    typer.echo("\n\nsources:")
     for i, h in enumerate(hits, 1):
         typer.echo(f"  [{i}] {h.episode_title} · {_ts(h.start_s)}–{_ts(h.end_s)}")
 

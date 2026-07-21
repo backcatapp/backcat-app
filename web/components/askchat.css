@@ -1,0 +1,225 @@
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 120px;
+}
+
+.chat-empty {
+  color: var(--dim);
+  font-size: 15px;
+  text-align: center;
+  padding: 48px 16px;
+  border: 1px dashed var(--line-2);
+  border-radius: 16px;
+  line-height: 1.7;
+}
+
+.chat-q {
+  align-self: flex-end;
+  max-width: 85%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 4px 16px;
+  padding: 12px 16px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.chat-a {
+  align-self: flex-start;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 16px 4px;
+  padding: 16px 18px;
+  background: rgba(31, 31, 40, 0.5);
+}
+
+.chat-a-text {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-a-text .cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  vertical-align: text-bottom;
+  background: var(--orange);
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* The citation pill — the signature component. Mono, Tabby timestamp,
+   quick 150ms settle on hover ("the pounce"). */
+.cite {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 3px 9px;
+  margin: 0 3px;
+  color: var(--muted);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 150ms ease-out, transform 150ms ease-out;
+  vertical-align: baseline;
+  transform: translateY(-1px);
+}
+
+.cite b {
+  color: var(--orange);
+  font-weight: 500;
+}
+
+.cite:hover {
+  border-color: var(--orange);
+  transform: translateY(-2px);
+}
+
+.chat-sources {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-source {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.chat-source.flash {
+  animation: srcflash 1.2s ease-out;
+}
+
+@keyframes srcflash {
+  0% { background: rgba(255, 138, 61, 0.18); }
+  100% { background: transparent; }
+}
+
+.chat-source .mono-ts {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--orange);
+  white-space: nowrap;
+}
+
+.chat-absence {
+  border: 1px dashed var(--line-2);
+  border-radius: 16px;
+  padding: 16px 18px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  align-self: flex-start;
+}
+
+.chat-absence b {
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.chat-error {
+  color: #e24b4a;
+  font-size: 13px;
+  align-self: flex-start;
+  padding: 8px 4px;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+  position: sticky;
+  bottom: 16px;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  color: var(--ink);
+  font-family: var(--font-instrument), system-ui, sans-serif;
+  font-size: 15px;
+  padding: 14px 18px;
+  outline: none;
+  transition: border-color 150ms ease-out;
+}
+
+.chat-input:focus {
+  border-color: var(--orange);
+}
+
+.chat-input::placeholder {
+  color: var(--dim);
+}
+
+.chat-send {
+  background: var(--orange);
+  color: var(--orange-ink);
+  border: none;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 0 22px;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.chat-send:hover:not(:disabled) {
+  background: var(--orange-lt);
+}
+
+.chat-send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.chat-thinking {
+  display: inline-flex;
+  gap: 5px;
+  padding: 6px 2px;
+}
+
+.chat-thinking i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.chat-thinking i:nth-child(2) { animation-delay: 0.15s; }
+.chat-thinking i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}

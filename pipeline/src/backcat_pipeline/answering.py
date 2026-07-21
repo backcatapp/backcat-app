@@ -36,20 +36,27 @@ def build_context(hits: list[Hit]) -> str:
     )
 
 
-def ask_stream(conn, *, catalog_id: str, query: str, k: int = 6):
-    """Yields answer text chunks; returns (hits, usage) via StopIteration value.
+def retrieve(conn, *, catalog_id: str, query: str, k: int = 6) -> tuple[list[Hit], float, bool]:
+    """Hybrid retrieval + coverage decision. Returns (hits, confidence, covered).
 
-    Caller displays citations [n] using the returned hits list.
+    covered=False means honest absence: no hits, no LLM call — caller logs the
+    question as unanswered (gap signal).
     """
     dense = dense_search(conn, catalog_id, query)
     keyword = keyword_search(conn, catalog_id, query)
     confidence = dense[0].score if dense else 0.0
     threshold = float(get_config(conn, "retrieval.min_dense_similarity"))
     if confidence < threshold:
-        # Honest absence — no LLM call, no fake coverage. Caller logs the question.
-        return [], None
-    hits = rrf_fuse({"dense": dense, "keyword": keyword}, k=k)
+        return [], confidence, False
+    return rrf_fuse({"dense": dense, "keyword": keyword}, k=k), confidence, True
 
+
+def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):
+    """Yields answer text chunks; StopIteration value is the API usage object.
+
+    Caller renders [n] citations from `hits` and commits the connection
+    (the cost event is written before this generator finishes).
+    """
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set — add it to pipeline/.env")
 
@@ -92,4 +99,14 @@ def ask_stream(conn, *, catalog_id: str, query: str, k: int = 6):
         model=model, units=usage.input_tokens + usage.output_tokens, unit_kind="tokens",
         cost_usd=cost,
     )
-    return hits, usage
+    return usage
+
+
+def log_question(
+    conn, *, catalog_id: str, question: str, answered: bool, confidence: float, ip: str | None = None
+) -> None:
+    conn.execute(
+        "INSERT INTO questions (catalog_id, question, answered, confidence, ip) "
+        "VALUES (%s, %s, %s, %s, %s)",
+        (catalog_id, question, answered, confidence, ip),
+    )
