@@ -21,6 +21,20 @@ MAX_UPLOAD_BYTES = 24 * 1024 * 1024  # stay under Groq's 25MB free-tier cap
 SEGMENT_SECONDS = 600
 
 
+def _sniff_ext(path: Path) -> str:
+    """Groq validates by filename extension; our files are stored as <id>.audio."""
+    head = path.open("rb").read(12)
+    if head.startswith(b"RIFF"):
+        return ".wav"
+    if head.startswith(b"OggS"):
+        return ".ogg"
+    if head.startswith(b"fLaC"):
+        return ".flac"
+    if head[4:8] == b"ftyp":
+        return ".m4a"
+    return ".mp3"  # ID3 tag or raw MPEG frames
+
+
 def _groq_transcribe(path: Path, model: str) -> dict:
     if not settings.groq_api_key:
         raise RuntimeError("GROQ_API_KEY is not set — add it to pipeline/.env")
@@ -28,7 +42,7 @@ def _groq_transcribe(path: Path, model: str) -> dict:
         resp = httpx.post(
             GROQ_URL,
             headers={"Authorization": f"Bearer {settings.groq_api_key}"},
-            files={"file": (path.name, f, "application/octet-stream")},
+            files={"file": (f"audio{_sniff_ext(path)}", f, "application/octet-stream")},
             data={
                 "model": model,
                 "response_format": "verbose_json",
@@ -36,7 +50,8 @@ def _groq_transcribe(path: Path, model: str) -> dict:
             },
             timeout=600,
         )
-    resp.raise_for_status()
+    if resp.status_code >= 400:
+        raise RuntimeError(f"groq {resp.status_code}: {resp.text[:500]}")
     return resp.json()
 
 
