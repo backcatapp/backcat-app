@@ -263,8 +263,9 @@ def status() -> None:
             """
         ).fetchall()
         costs = conn.execute(
-            "SELECT coalesce(sum(cost_usd), 0), coalesce(sum(units), 0) FROM cost_events "
-            "WHERE unit_kind = 'audio_hours'"
+            "SELECT coalesce(sum(cost_usd), 0), "
+            "coalesce(sum(units) FILTER (WHERE unit_kind = 'audio_hours'), 0) "
+            "FROM cost_events"
         ).fetchone()
     if not rows:
         typer.echo("no jobs yet — run `ingest add <rss_url>` first")
