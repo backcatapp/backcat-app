@@ -193,6 +193,64 @@ def retry(catalog: str) -> None:
     typer.echo(f"requeued {n} failed jobs")
 
 
+def _resolve_catalog(conn, catalog: str) -> str:
+    row = conn.execute(
+        "SELECT id FROM catalogs WHERE id = %s OR name = %s", (catalog, catalog)
+    ).fetchone()
+    if row is None:
+        raise typer.BadParameter(f"no catalog '{catalog}'")
+    return row[0]
+
+
+def _ts(seconds: float) -> str:
+    m, s = divmod(int(seconds), 60)
+    return f"{m}:{s:02d}"
+
+
+@app.command()
+def search(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
+    """Hybrid retrieval (dense + keyword + RRF) — cited chunks in the terminal."""
+    from .retrieval import hybrid_search
+
+    with connect() as conn:
+        catalog_id = _resolve_catalog(conn, catalog)
+        hits = hybrid_search(conn, catalog_id, query, k=k)
+        conn.commit()  # persist the query-embedding cost event
+    if not hits:
+        typer.echo("no results — catalog may not cover this (honest absence)")
+        return
+    for i, h in enumerate(hits, 1):
+        typer.echo(
+            f"{i}. [{h.episode_title} · {_ts(h.start_s)}–{_ts(h.end_s)}] "
+            f"score={h.score:.4f} via {'+'.join(h.channels)}"
+        )
+        typer.echo(f"   {h.text[:200]}{'…' if len(h.text) > 200 else ''}")
+
+
+@app.command()
+def ask(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
+    """Grounded, cited answer streamed to the terminal (Claude, grounded-only)."""
+    from .answering import _ts, ask_stream
+
+    with connect() as conn:
+        catalog_id = _resolve_catalog(conn, catalog)
+        gen = ask_stream(conn, catalog_id=catalog_id, query=query, k=k)
+        hits = None
+        try:
+            while True:
+                typer.echo(next(gen), nl=False)
+        except StopIteration as done:
+            hits, _usage = done.value
+        conn.commit()
+    typer.echo("")
+    if not hits:
+        typer.echo("not covered by this catalog (honest absence) — question should be logged")
+        return
+    typer.echo("\nsources:")
+    for i, h in enumerate(hits, 1):
+        typer.echo(f"  [{i}] {h.episode_title} · {_ts(h.start_s)}–{_ts(h.end_s)}")
+
+
 @app.command()
 def status() -> None:
     """Job counts per catalog and stage — the terminal view of the status page."""

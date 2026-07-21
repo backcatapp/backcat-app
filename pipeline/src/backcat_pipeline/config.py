@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://backcat:backcat@localhost:5432/backcat"
     groq_api_key: str = ""
     openai_api_key: str = ""
+    anthropic_api_key: str = ""
 
 
 settings = Settings()
@@ -28,6 +29,12 @@ _DEFAULTS: dict[str, Any] = {
     "asr_usd_per_audio_hour": 0.04,
     "model.embedding.openai": "text-embedding-3-small",
     "openai_embed_usd_per_mtok": 0.02,
+    # Below this dense cosine similarity, retrieval is treated as no-coverage
+    # (honest absence). Placeholder until the day-7 eval harness tunes it.
+    "retrieval.min_dense_similarity": 0.2,
+    "model.answering": "claude-sonnet-5",
+    "answering_usd_per_mtok_in": 3.0,
+    "answering_usd_per_mtok_out": 15.0,
     "max_job_attempts": 3,
 }
 
