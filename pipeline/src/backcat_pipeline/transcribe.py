@@ -6,6 +6,7 @@ Cost = response audio duration x configured $/audio-hour, logged before commit.
 """
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -55,15 +56,25 @@ def _groq_transcribe(path: Path, model: str) -> dict:
     return resp.json()
 
 
-def _segment(path: Path, workdir: Path) -> list[Path]:
-    if shutil.which("ffmpeg") is None:
+def _ffmpeg() -> str:
+    """PATH first, then env override, then the winget shim location."""
+    found = shutil.which("ffmpeg") or os.environ.get("FFMPEG_EXE")
+    if not found:
+        winget_shim = Path.home() / "AppData/Local/Microsoft/WinGet/Links/ffmpeg.exe"
+        if winget_shim.exists():
+            found = str(winget_shim)
+    if not found:
         raise RuntimeError(
-            f"{path.name} exceeds the {MAX_UPLOAD_BYTES >> 20}MB upload cap and ffmpeg is not "
-            "installed to split it. Install ffmpeg (winget install ffmpeg) and retry."
+            "file exceeds the upload cap and ffmpeg is not installed to split it. "
+            "Install ffmpeg (winget install Gyan.FFmpeg) and retry."
         )
+    return found
+
+
+def _segment(path: Path, workdir: Path) -> list[Path]:
     pattern = workdir / "seg_%04d.mp3"
     subprocess.run(
-        ["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-i", str(path),
+        [_ffmpeg(), "-nostdin", "-hide_banner", "-loglevel", "error", "-i", str(path),
          "-f", "segment", "-segment_time", str(SEGMENT_SECONDS), "-acodec", "libmp3lame",
          "-b:a", "64k", "-ac", "1", str(pattern)],
         check=True,

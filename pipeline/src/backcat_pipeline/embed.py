@@ -55,6 +55,12 @@ def embed_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int]:
     ).fetchone()[0]
     embedder = get_embedder(conn, provider)
 
+    total_chunks = conn.execute(
+        "SELECT count(*) FROM chunks WHERE episode_id = %s", (episode_id,)
+    ).fetchone()[0]
+    if total_chunks == 0:
+        raise RuntimeError("no chunks yet — chunk stage must run first")
+
     rows = conn.execute(
         f"""
         SELECT c.id, c.text FROM chunks c
