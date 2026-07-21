@@ -59,13 +59,46 @@ def catalog_graph_endpoint(catalog_id: str, limit: int = 120):
         raise HTTPException(status_code=503, detail="graph unavailable")
 
 
+@app.get("/api/concepts/chunks")
+def concept_chunks_endpoint(uid: str):
+    """Moments (chunks) related to a selected graph node, with text + player URLs."""
+    from backcat_pipeline.graph import concept_chunks
+
+    try:
+        rows = concept_chunks(uid)
+    except Exception:
+        raise HTTPException(status_code=503, detail="graph unavailable")
+    if not rows:
+        return {"moments": []}
+    ids = [r["chunk_id"] for r in rows]
+    with connect() as conn:
+        db_rows = conn.execute(
+            """
+            SELECT c.id, e.title, e.source_url, c.start_s, c.end_s, c.text
+            FROM chunks c JOIN episodes e ON e.id = c.episode_id
+            WHERE c.id = ANY(%s)
+            ORDER BY e.title, c.start_s
+            """,
+            (ids,),
+        ).fetchall()
+    return {
+        "moments": [
+            {
+                "episode": r[1], "source_url": r[2], "start_s": float(r[3]),
+                "end_s": float(r[4]), "text": r[5],
+            }
+            for r in db_rows
+        ]
+    }
+
+
 @app.get("/api/episodes/{episode_id}/topics")
 def episode_topics_endpoint(episode_id: str):
     """Per-episode topics with mention windows (timeline visualization)."""
     from backcat_pipeline.graph import episode_topics
 
     try:
-        return {"topics": episode_topics(episode_id)}
+        return episode_topics(episode_id)
     except Exception:
         raise HTTPException(status_code=503, detail="graph unavailable")
 

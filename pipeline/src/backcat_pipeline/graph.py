@@ -30,8 +30,8 @@ def get_driver():
 
 def ensure_constraints() -> None:
     with get_driver().session() as s:
-        for label in ("Concept", "Person", "Resource", "Episode", "Chunk", "Catalog"):
-            key = "uid" if label in ("Concept", "Person", "Resource") else "id"
+        for label in ("Concept", "Person", "Resource", "Category", "Episode", "Chunk", "Catalog"):
+            key = "uid" if label in ("Concept", "Person", "Resource", "Category") else "id"
             s.run(
                 f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.{key} IS UNIQUE"
             )
@@ -117,6 +117,46 @@ def write_extraction(
     return len(mentions)
 
 
+def write_categories(
+    *, catalog_id: str, episode_id: str, categories: dict[str, list[str]]
+) -> None:
+    """categories: {category_name: [child entity names]}. Two-level hierarchy:
+    (Episode)-[:ABOUT]->(Category)-[:INCLUDES {episode_id}]->(entity).
+    Idempotent: this episode's ABOUT/INCLUDES edges are replaced."""
+    with get_driver().session() as s:
+        s.run(
+            "MATCH (:Episode {id: $eid})-[r:ABOUT]->(:Category) DELETE r", eid=episode_id
+        )
+        s.run(
+            "MATCH (:Category)-[r:INCLUDES {episode_id: $eid}]->() DELETE r", eid=episode_id
+        )
+        for name, children in categories.items():
+            if not name.strip():
+                continue
+            uid = f"{catalog_id}:cat:{norm_key(name)}"
+            s.run(
+                """
+                MERGE (c:Category {uid: $uid})
+                SET c.name = $name, c.catalog_id = $cid
+                WITH c
+                MATCH (ep:Episode {id: $eid})
+                MERGE (ep)-[:ABOUT]->(c)
+                """,
+                uid=uid, name=name.strip(), cid=catalog_id, eid=episode_id,
+            )
+            child_uids = [f"{catalog_id}:{norm_key(ch)}" for ch in children if ch.strip()]
+            s.run(
+                """
+                UNWIND $child_uids AS cu
+                MATCH (c:Category {uid: $uid})
+                MATCH (n {uid: cu})
+                MERGE (c)-[:INCLUDES {episode_id: $eid}]->(n)
+                """,
+                child_uids=child_uids, uid=uid, eid=episode_id,
+            )
+        s.run("MATCH (c:Category) WHERE NOT ()-[:ABOUT]->(c) DETACH DELETE c")
+
+
 def catalog_graph(catalog_id: str, limit: int = 120) -> dict:
     """Nodes (entities w/ mention counts) + links (chunk co-occurrence)."""
     with get_driver().session() as s:
@@ -142,23 +182,77 @@ def catalog_graph(catalog_id: str, limit: int = 120) -> dict:
             """,
             cid=catalog_id, ids=ids,
         ).data()
+        # top-level categories as hub nodes with INCLUDES links to children
+        cats = s.run(
+            """
+            MATCH (c:Category {catalog_id: $cid})-[:INCLUDES]->(n)
+            WHERE n.uid IN $ids
+            WITH c, collect(DISTINCT n.uid) AS children
+            RETURN c.uid AS id, c.name AS name, 'Category' AS label,
+                   size(children) AS mentions, 0 AS episodes, children
+            """,
+            cid=catalog_id, ids=ids,
+        ).data()
+        for c in cats:
+            children = c.pop("children")
+            nodes.append(c)
+            for ch in children:
+                links.append({"source": c["id"], "target": ch, "weight": 1, "kind": "includes"})
     return {"nodes": nodes, "links": links}
 
 
-def episode_topics(episode_id: str) -> list[dict]:
-    """Entities in an episode with their mention windows (for the timeline viz)."""
+def concept_chunks(uid: str, limit: int = 30) -> list[dict]:
+    """Moments for a selected node. Categories traverse INCLUDES one hop."""
     with get_driver().session() as s:
         return s.run(
+            """
+            MATCH (n {uid: $uid})
+            OPTIONAL MATCH (n)-[:MENTIONED_IN]->(direct:Chunk)
+            OPTIONAL MATCH (n)-[:INCLUDES]->()-[:MENTIONED_IN]->(child:Chunk)
+            WITH collect(DISTINCT direct) + collect(DISTINCT child) AS chs
+            UNWIND chs AS ch
+            WITH DISTINCT ch WHERE ch IS NOT NULL
+            RETURN ch.id AS chunk_id, ch.episode_id AS episode_id,
+                   ch.start_s AS start_s, ch.end_s AS end_s
+            ORDER BY ch.episode_id, ch.start_s LIMIT $limit
+            """,
+            uid=uid, limit=limit,
+        ).data()
+
+
+def episode_topics(episode_id: str) -> dict:
+    """Two-level topics: categories (episode 'about' words) -> detailed topics
+    with mention windows. Entities without a category land in 'uncategorized'."""
+    with get_driver().session() as s:
+        topics = s.run(
             f"""
             MATCH (n)-[:MENTIONED_IN]->(ch:Chunk {{episode_id: $eid}})
             WHERE {_ENTITY}
-            WITH n, collect({{start_s: ch.start_s, end_s: ch.end_s}}) AS windows,
+            OPTIONAL MATCH (cat:Category)-[:INCLUDES {{episode_id: $eid}}]->(n)
+            WITH n, cat, collect({{start_s: ch.start_s, end_s: ch.end_s}}) AS windows,
                  count(ch) AS mentions
             ORDER BY mentions DESC
-            RETURN n.name AS name, labels(n)[0] AS label, mentions, windows
+            RETURN coalesce(cat.name, '') AS category, n.name AS name,
+                   labels(n)[0] AS label, mentions, windows
             """,
             eid=episode_id,
         ).data()
+        cat_order = [
+            r["name"]
+            for r in s.run(
+                "MATCH (:Episode {id: $eid})-[:ABOUT]->(c:Category) RETURN c.name AS name",
+                eid=episode_id,
+            ).data()
+        ]
+    grouped: dict[str, list[dict]] = {}
+    for t in topics:
+        grouped.setdefault(t.pop("category"), []).append(t)
+    categories = [
+        {"name": c, "topics": grouped[c]} for c in cat_order if c in grouped
+    ]
+    if "" in grouped:
+        categories.append({"name": "", "topics": grouped[""]})
+    return {"categories": categories}
 
 
 def _entity_matches(query: str, names: list[dict]) -> list[str]:

@@ -10,7 +10,7 @@ import anthropic as anthropic_sdk
 
 from .config import get_config, settings
 from .costs import ensure_spend_allowed, log_cost
-from .graph import sync_episode, write_extraction
+from .graph import sync_episode, write_categories, write_extraction
 
 WINDOW_CHUNKS = 8  # ~5-6 min of transcript per extraction call
 
@@ -34,6 +34,33 @@ _SCHEMA = {
     "required": ["entities"],
     "additionalProperties": False,
 }
+
+_CAT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "categories": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "children": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["name", "children"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["categories"],
+    "additionalProperties": False,
+}
+
+_CAT_PROMPT = """Episode title: {title}
+
+These entities were extracted from the episode's transcript:
+{entities}
+
+Summarize what this episode is about as 2-5 top-level CATEGORIES (each 1-3 words, in the SAME LANGUAGE as the entities). Then assign every entity to exactly one category (children = exact entity names from the list). Categories are broader themes; entities are the details."""
 
 _PROMPT = """Extract the distinct topics/concepts, people, and resources (books, tools, studies, works) genuinely discussed in this transcript window from one episode.
 
@@ -114,4 +141,38 @@ def extract_episode(conn, *, catalog_id: str, episode_id: str) -> tuple[int, int
         catalog_id=catalog_id, episode_id=episode_id, mentions=mentions,
         chunk_starts=chunk_starts,
     )
+
+    # Second pass: summarize into 2-5 top-level categories (episode "about" words)
+    if mentions:
+        import json
+
+        title = conn.execute(
+            "SELECT title FROM episodes WHERE id = %s", (episode_id,)
+        ).fetchone()[0]
+        names = sorted({name for name, _ in mentions})
+        ensure_spend_allowed(conn, 0.002)
+        resp = client.messages.create(
+            model=model,
+            max_tokens=1200,
+            output_config={"format": {"type": "json_schema", "schema": _CAT_SCHEMA}},
+            messages=[
+                {
+                    "role": "user",
+                    "content": _CAT_PROMPT.format(title=title, entities="\n".join(names)),
+                }
+            ],
+        )
+        data = json.loads(next(b.text for b in resp.content if b.type == "text"))
+        categories = {
+            c["name"]: c["children"] for c in data.get("categories", []) if c.get("name")
+        }
+        write_categories(catalog_id=catalog_id, episode_id=episode_id, categories=categories)
+        total_tokens += resp.usage.input_tokens + resp.usage.output_tokens
+        log_cost(
+            conn, catalog_id=catalog_id, episode_id=episode_id, service="anthropic_extract",
+            model=model, units=resp.usage.input_tokens + resp.usage.output_tokens,
+            unit_kind="tokens",
+            cost_usd=(resp.usage.input_tokens * rate_in + resp.usage.output_tokens * rate_out)
+            / 1_000_000,
+        )
     return n, total_tokens

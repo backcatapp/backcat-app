@@ -11,7 +11,7 @@ async function getTopics(episodeId: string) {
       cache: "no-store",
     });
     if (!r.ok) return [];
-    return (await r.json()).topics ?? [];
+    return (await r.json()).categories ?? [];
   } catch {
     return [];
   }
@@ -41,7 +41,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
   `;
   if (!episode) notFound();
 
-  const topics = await getTopics(id);
+  const topicCategories = await getTopics(id);
 
   const chunks = await sql`
     SELECT ch.id, ch.start_s, ch.end_s, ch.text,
@@ -69,8 +69,11 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
 
       {!episode.text && <p className="dash-sub">Not transcribed yet.</p>}
 
-      {topics.length > 0 && (
-        <EpisodeTopics topics={topics} duration={Number(episode.audio_duration_s ?? 0)} />
+      {topicCategories.length > 0 && (
+        <EpisodeTopics
+          categories={topicCategories}
+          duration={Number(episode.audio_duration_s ?? 0)}
+        />
       )}
 
       {chunks.length > 0 && (
