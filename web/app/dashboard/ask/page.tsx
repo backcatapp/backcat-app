@@ -44,7 +44,7 @@ export default async function TestChatPage({
 
       {selected ? (
         <div style={{ maxWidth: 720 }}>
-          <AskChat key={selected.id} catalogId={selected.id} />
+          <AskChat key={selected.id} catalogId={selected.id} showTranscripts />
         </div>
       ) : (
         <p className="dash-sub">

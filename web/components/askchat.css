@@ -277,6 +277,38 @@
   margin-bottom: 6px;
 }
 
+.chat-source-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.src-transcript {
+  margin: 0 10px 6px 46px;
+}
+
+.src-transcript summary {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  cursor: pointer;
+  user-select: none;
+}
+
+.src-transcript summary:hover {
+  color: var(--muted);
+}
+
+.src-transcript p {
+  margin: 8px 0 4px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+  border-inline-start: 2px solid var(--line-2);
+  padding-inline-start: 12px;
+}
+
 .chat-source {
   display: flex;
   align-items: center;

@@ -54,7 +54,7 @@ RSS URL → parse feed (episode GUID dedupe, enclosure redirects) → download a
 
 ## 2. Indexing
 
-Chunks are **time windows, not character counts**: 60–90s, 15s overlap, aligned to word boundaries; each chunk carries `(catalog_id, episode_id, start_ts, end_ts, text)`. Full-text (tsvector) + dense embedding per chunk.
+Chunks are **time windows, not character counts**: 30–45s with 10s overlap (config-driven via `app_config`; shortened from 60–90s so a player seeked to chunk start lands within the ±15s precision bar), aligned to word boundaries; each chunk carries `(catalog_id, episode_id, start_ts, end_ts, text)`. Full-text (tsvector) + dense embedding per chunk.
 
 **Idempotency** (day-3 decision): chunk IDs are deterministic — `hash(episode_id, start_ts)` — and every pipeline write is an upsert (Postgres `ON CONFLICT`, Neo4j `MERGE`). Re-runs and re-index on demand never duplicate rows or nodes; any stage can be safely repeated per catalog.
 

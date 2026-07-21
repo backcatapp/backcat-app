@@ -1,22 +1,31 @@
-"""Time-aligned chunking: 60–90s windows, 15s overlap, aligned to word boundaries.
+"""Time-aligned chunking: short windows aligned to word boundaries.
 
-Windows prefer to break at sentence-ending words once past the 60s minimum;
-otherwise they hard-cut at 90s. Chunk IDs are deterministic on (episode_id,
-start_ms) so re-chunking replaces rather than duplicates.
+Window sizes are config-driven (app_config: chunk.target_min_s / target_max_s /
+overlap_s). Defaults are 30–45s with 10s overlap — short enough that a player
+seeked to the chunk start lands close to the cited claim (the ±15s precision
+bar). Windows prefer to break at sentence-ending words once past the minimum;
+otherwise they hard-cut at the max. Chunk IDs are deterministic on
+(episode_id, start_ms) so re-chunking replaces rather than duplicates.
 """
 
 import json
 
+from .config import get_config
 from .ids import det_id
 
-TARGET_MIN_S = 60.0
-TARGET_MAX_S = 90.0
-OVERLAP_S = 15.0
+TARGET_MIN_S = 30.0
+TARGET_MAX_S = 45.0
+OVERLAP_S = 10.0
 
 _SENTENCE_END = (".", "?", "!")
 
 
-def build_windows(words: list[dict]) -> list[dict]:
+def build_windows(
+    words: list[dict],
+    target_min_s: float = TARGET_MIN_S,
+    target_max_s: float = TARGET_MAX_S,
+    overlap_s: float = OVERLAP_S,
+) -> list[dict]:
     """words: [{"w": str, "s": float, "e": float}] -> [{"start_s", "end_s", "text"}]."""
     out: list[dict] = []
     n = len(words)
@@ -25,8 +34,8 @@ def build_windows(words: list[dict]) -> list[dict]:
         t0 = words[i]["s"]
         j = i
         sentence_end = None
-        while j < n and words[j]["e"] - t0 <= TARGET_MAX_S:
-            if words[j]["e"] - t0 >= TARGET_MIN_S and words[j]["w"].strip().endswith(_SENTENCE_END):
+        while j < n and words[j]["e"] - t0 <= target_max_s:
+            if words[j]["e"] - t0 >= target_min_s and words[j]["w"].strip().endswith(_SENTENCE_END):
                 sentence_end = j
             j += 1
         if j >= n:
@@ -44,7 +53,7 @@ def build_windows(words: list[dict]) -> list[dict]:
         )
         if end >= n - 1:
             break
-        overlap_from = words[end]["e"] - OVERLAP_S
+        overlap_from = words[end]["e"] - overlap_s
         k = i + 1
         while k <= end and words[k]["s"] < overlap_from:
             k += 1
@@ -57,7 +66,12 @@ def chunk_episode(conn, *, catalog_id: str, episode_id: str) -> int:
     if row is None:
         raise RuntimeError("no transcript yet — transcribe stage must run first")
     words = row[0] if isinstance(row[0], list) else json.loads(row[0])
-    windows = build_windows(words)
+    windows = build_windows(
+        words,
+        target_min_s=float(get_config(conn, "chunk.target_min_s")),
+        target_max_s=float(get_config(conn, "chunk.target_max_s")),
+        overlap_s=float(get_config(conn, "chunk.overlap_s")),
+    )
 
     ids = []
     for w in windows:

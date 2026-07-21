@@ -98,6 +98,7 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                         "start_s": h.start_s,
                         "end_s": h.end_s,
                         "source_url": h.source_url,
+                        "text": h.text,
                     }
                     for i, h in enumerate(hits, 1)
                 ],

@@ -35,6 +35,11 @@ _DEFAULTS: dict[str, Any] = {
     "asr_usd_per_audio_hour": 0.04,
     "model.embedding.openai": "text-embedding-3-small",
     "openai_embed_usd_per_mtok": 0.02,
+    # Chunk windows: short enough that seeking to chunk start lands near the
+    # cited claim (±15s precision bar). Eval harness (day 7) validates quality.
+    "chunk.target_min_s": 30.0,
+    "chunk.target_max_s": 45.0,
+    "chunk.overlap_s": 10.0,
     # Below this dense cosine similarity, retrieval is treated as no-coverage
     # (honest absence). Placeholder until the day-7 eval harness tunes it.
     "retrieval.min_dense_similarity": 0.2,

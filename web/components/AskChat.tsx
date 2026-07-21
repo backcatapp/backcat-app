@@ -92,9 +92,12 @@ function Player({ source, onClose }: { source: Source; onClose: () => void }) {
 export default function AskChat({
   catalogId,
   placeholder = "Ask anything about this catalog…",
+  showTranscripts = false,
 }: {
   catalogId: string;
   placeholder?: string;
+  /** Testing aid (dashboard only): show each moment's transcript text. */
+  showTranscripts?: boolean;
 }) {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [input, setInput] = useState("");
@@ -204,20 +207,27 @@ export default function AskChat({
                         const playable = !!youtubeId(s.source_url);
                         const active = playingSrc?.i === s.i;
                         return (
-                          <button
-                            key={s.i}
-                            className={`chat-source${active ? " active" : ""}`}
-                            onClick={() => activate(idx, s.i)}
-                            disabled={!playable}
-                          >
-                            <span className={`src-play${playable ? "" : " off"}`}>
-                              {playable ? "▶" : "•"}
-                            </span>
-                            <span className="mono-ts">
-                              {ts(s.start_s)}–{ts(s.end_s)}
-                            </span>
-                            <span className="src-ep">{s.episode}</span>
-                          </button>
+                          <div key={s.i} className="chat-source-wrap">
+                            <button
+                              className={`chat-source${active ? " active" : ""}`}
+                              onClick={() => activate(idx, s.i)}
+                              disabled={!playable}
+                            >
+                              <span className={`src-play${playable ? "" : " off"}`}>
+                                {playable ? "▶" : "•"}
+                              </span>
+                              <span className="mono-ts">
+                                {ts(s.start_s)}–{ts(s.end_s)}
+                              </span>
+                              <span className="src-ep">{s.episode}</span>
+                            </button>
+                            {showTranscripts && s.text && (
+                              <details className="src-transcript">
+                                <summary>transcript</summary>
+                                <p dir="auto">{s.text}</p>
+                              </details>
+                            )}
+                          </div>
                         );
                       })}
                     </div>

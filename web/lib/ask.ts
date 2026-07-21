@@ -7,6 +7,7 @@ export type Source = {
   start_s: number;
   end_s: number;
   source_url?: string | null;
+  text?: string;
 };
 
 /** Extract a YouTube video id from watch/short/embed/youtu.be URLs. */

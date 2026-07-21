@@ -18,7 +18,7 @@ Product docs live in the Obsidian vault at `G:\Obsidian\MyNet\10 Projects\Backca
 
 1. **Grounded-only answers** — every factual claim cites a retrieved chunk; no chunk, no claim.
 2. **Honest absence** — if the catalog doesn't cover it, say so and log the question (feeds gap nodes). Never fake coverage.
-3. **The timestamp IS the product** — chunks are time windows (60–90s, 15s overlap), never character counts; provenance `(episode_id, start_ts)` on every graph edge.
+3. **The timestamp IS the product** — chunks are time windows (30–45s default, config-driven), never character counts; provenance `(episode_id, start_ts)` on every graph edge.
 4. **Measured, not vibed** — retrieval changes are judged by the eval harness, not by eyeballing answers.
 5. **Creator-authorized only** — no scraping; RSS/OAuth/upload paths only.
 
