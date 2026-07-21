@@ -1,6 +1,21 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/auth";
+import EpisodeTopics from "@/components/EpisodeTopics";
 import { sql } from "@/lib/db";
+
+const SERVE_INTERNAL = process.env.SERVE_INTERNAL_URL ?? "http://localhost:8000";
+
+async function getTopics(episodeId: string) {
+  try {
+    const r = await fetch(`${SERVE_INTERNAL}/api/episodes/${episodeId}/topics`, {
+      cache: "no-store",
+    });
+    if (!r.ok) return [];
+    return (await r.json()).topics ?? [];
+  } catch {
+    return [];
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +40,8 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
     WHERE e.id = ${id}
   `;
   if (!episode) notFound();
+
+  const topics = await getTopics(id);
 
   const chunks = await sql`
     SELECT ch.id, ch.start_s, ch.end_s, ch.text,
@@ -51,6 +68,10 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
       </p>
 
       {!episode.text && <p className="dash-sub">Not transcribed yet.</p>}
+
+      {topics.length > 0 && (
+        <EpisodeTopics topics={topics} duration={Number(episode.audio_duration_s ?? 0)} />
+      )}
 
       {chunks.length > 0 && (
         <div className="section">

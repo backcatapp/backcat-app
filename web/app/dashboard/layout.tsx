@@ -29,6 +29,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Link className="dash-nav-link" href="/dashboard/questions">
           Questions
         </Link>
+        <Link className="dash-nav-link" href="/dashboard/graph">
+          Graph
+        </Link>
         {isAdmin && (
           <Link className="dash-nav-link" href="/dashboard/settings">
             Settings

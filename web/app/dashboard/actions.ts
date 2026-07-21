@@ -34,7 +34,7 @@ export async function addYoutubeChannel(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
-const STAGES = ["download", "transcribe", "chunk", "embed"] as const;
+const STAGES = ["download", "transcribe", "chunk", "embed", "graph"] as const;
 
 export async function queueEpisode(episodeId: string) {
   await requireAdmin();

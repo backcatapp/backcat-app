@@ -79,6 +79,38 @@ def keyword_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
     return [Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5], r[6]) for r in rows]
 
 
+def graph_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
+    """Third channel (day 9): query-named entities -> their chunks via Neo4j.
+
+    Degrades to empty on any graph failure — retrieval must not depend on
+    Neo4j being up.
+    """
+    try:
+        from .graph import graph_search_chunks
+
+        scored = graph_search_chunks(catalog_id, query, k=k)
+    except Exception:
+        return []
+    if not scored:
+        return []
+    ids = [c for c, _ in scored]
+    rows = conn.execute(
+        _SELECT + """
+        FROM chunks c
+        JOIN episodes e ON e.id = c.episode_id
+        WHERE c.id = ANY(%s)
+        """,
+        (ids,),
+    ).fetchall()
+    by_id = {r[0]: r for r in rows}
+    hits = []
+    for chunk_id, score in scored:
+        r = by_id.get(chunk_id)
+        if r:
+            hits.append(Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5], r[6], score=score))
+    return hits
+
+
 def rrf_fuse(channels: dict[str, list[Hit]], k: int = 6) -> list[Hit]:
     """Reciprocal-rank fusion. score = sum over channels of 1/(RRF_K + rank)."""
     fused: dict[str, Hit] = {}
@@ -95,6 +127,7 @@ def hybrid_search(conn, catalog_id: str, query: str, k: int = 6) -> list[Hit]:
         {
             "dense": dense_search(conn, catalog_id, query),
             "keyword": keyword_search(conn, catalog_id, query),
+            "graph": graph_search(conn, catalog_id, query),
         },
         k=k,
     )

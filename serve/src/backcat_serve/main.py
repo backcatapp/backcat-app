@@ -48,6 +48,28 @@ def healthz():
     return {"ok": True}
 
 
+@app.get("/api/catalogs/{catalog_id}/graph")
+def catalog_graph_endpoint(catalog_id: str, limit: int = 120):
+    """Concept graph for visualization: entities + co-occurrence links."""
+    from backcat_pipeline.graph import catalog_graph
+
+    try:
+        return catalog_graph(catalog_id, limit=min(limit, 300))
+    except Exception:
+        raise HTTPException(status_code=503, detail="graph unavailable")
+
+
+@app.get("/api/episodes/{episode_id}/topics")
+def episode_topics_endpoint(episode_id: str):
+    """Per-episode topics with mention windows (timeline visualization)."""
+    from backcat_pipeline.graph import episode_topics
+
+    try:
+        return {"topics": episode_topics(episode_id)}
+    except Exception:
+        raise HTTPException(status_code=503, detail="graph unavailable")
+
+
 # Internal endpoints: called server-to-server by the dashboard's Server Actions
 # (which enforce the admin role). Shared-token gate, never exposed to browsers.
 INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "dev-internal-token")

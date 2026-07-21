@@ -10,7 +10,7 @@ import anthropic as anthropic_sdk
 
 from .config import get_config, settings
 from .costs import ensure_spend_allowed, log_cost
-from .retrieval import Hit, dense_search, keyword_search, rrf_fuse
+from .retrieval import Hit, dense_search, graph_search, keyword_search, rrf_fuse
 
 SYSTEM = """You answer fans' questions about a creator's catalog using ONLY the numbered excerpts provided.
 
@@ -44,11 +44,18 @@ def retrieve(conn, *, catalog_id: str, query: str, k: int = 6) -> tuple[list[Hit
     """
     dense = dense_search(conn, catalog_id, query)
     keyword = keyword_search(conn, catalog_id, query)
+    graph = graph_search(conn, catalog_id, query)
     confidence = dense[0].score if dense else 0.0
     threshold = float(get_config(conn, "retrieval.min_dense_similarity"))
-    if confidence < threshold:
+    # A direct graph hit (entity named in the query) also counts as coverage —
+    # exact concept matches shouldn't be vetoed by embedding similarity alone.
+    if confidence < threshold and not graph:
         return [], confidence, False
-    return rrf_fuse({"dense": dense, "keyword": keyword}, k=k), confidence, True
+    return (
+        rrf_fuse({"dense": dense, "keyword": keyword, "graph": graph}, k=k),
+        confidence,
+        True,
+    )
 
 
 def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):

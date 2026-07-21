@@ -181,10 +181,19 @@ def run(
         )
         return f"({n} chunks, {tokens} tokens)"
 
+    def _graph(conn, episode_id: str, audio_url: str) -> str:
+        from .extraction import extract_episode
+
+        n, tokens = extract_episode(
+            conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id
+        )
+        return f"({n} entities, {tokens} tokens)"
+
     _run_stage(catalog, "download", _download, episode)
     _run_stage(catalog, "transcribe", _transcribe, episode)
     _run_stage(catalog, "chunk", _chunk, episode)
     _run_stage(catalog, "embed", _embed, episode)
+    _run_stage(catalog, "graph", _graph, episode)
 
 
 @app.command(name="add-channel")

@@ -6,7 +6,7 @@ import feedparser
 
 from .ids import det_id
 
-STAGES = ("download", "transcribe", "chunk", "embed")
+STAGES = ("download", "transcribe", "chunk", "embed", "graph")
 
 
 def add_catalog(conn, rss_url: str, limit: int | None = None) -> tuple[str, int, int]:

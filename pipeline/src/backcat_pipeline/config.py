@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "backcatdev"
 
 
 settings = Settings()
@@ -46,6 +49,9 @@ _DEFAULTS: dict[str, Any] = {
     "model.answering": "claude-sonnet-5",
     "answering_usd_per_mtok_in": 3.0,
     "answering_usd_per_mtok_out": 15.0,
+    "model.extraction": "claude-haiku-4-5",
+    "extraction_usd_per_mtok_in": 1.0,
+    "extraction_usd_per_mtok_out": 5.0,
     "rate_limit.questions_per_hour": 20,
     "max_job_attempts": 3,
 }
