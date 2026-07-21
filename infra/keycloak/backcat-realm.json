@@ -1,0 +1,40 @@
+{
+  "realm": "backcat",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginTheme": "keycloak",
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "Full config authority in the panel" },
+      { "name": "creator", "description": "Catalog owner (dashboard, v1.0)" },
+      { "name": "fan", "description": "Fan-side account (later)" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "backcat-web",
+      "name": "Backcat Web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dev-secret-backcat-web",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@backcat.dev",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Backcat",
+      "lastName": "Admin",
+      "credentials": [{ "type": "password", "value": "backcatdev", "temporary": false }],
+      "realmRoles": ["admin"]
+    }
+  ]
+}

@@ -36,6 +36,21 @@ services:
       timeout: 5s
       retries: 10
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: backcat-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: backcatdev
+    ports:
+      - "8080:8080"
+    volumes:
+      # No state volume on purpose: the committed realm export is the source of
+      # truth; the container re-imports it on every start. Dev users/sessions
+      # are throwaway.
+      - ./infra/keycloak:/opt/keycloak/data/import:ro
+
 volumes:
   pgdata:
   neo4jdata:
