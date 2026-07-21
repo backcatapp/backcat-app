@@ -99,14 +99,30 @@ def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):
         model=model, units=usage.input_tokens + usage.output_tokens, unit_kind="tokens",
         cost_usd=cost,
     )
-    return usage
+    return usage, cost
 
 
 def log_question(
     conn, *, catalog_id: str, question: str, answered: bool, confidence: float, ip: str | None = None
-) -> None:
-    conn.execute(
+) -> int:
+    return conn.execute(
         "INSERT INTO questions (catalog_id, question, answered, confidence, ip) "
-        "VALUES (%s, %s, %s, %s, %s)",
+        "VALUES (%s, %s, %s, %s, %s) RETURNING id",
         (catalog_id, question, answered, confidence, ip),
+    ).fetchone()[0]
+
+
+def record_answer(
+    conn, *, question_id: int, answer: str, hits: list[Hit], cost_usd: float | None
+) -> None:
+    import json
+
+    sources = [
+        {"i": i, "episode": h.episode_title, "start_s": h.start_s, "end_s": h.end_s,
+         "source_url": h.source_url}
+        for i, h in enumerate(hits, 1)
+    ]
+    conn.execute(
+        "UPDATE questions SET answer = %s, sources = %s, cost_usd = %s WHERE id = %s",
+        (answer, json.dumps(sources, ensure_ascii=False), cost_usd, question_id),
     )

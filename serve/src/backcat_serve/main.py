@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from backcat_pipeline.answering import log_question, retrieve, stream_answer
+from backcat_pipeline.answering import log_question, record_answer, retrieve, stream_answer
 from backcat_pipeline.config import get_config
 from backcat_pipeline.costs import SpendBlocked
 from backcat_pipeline.db import connect
@@ -77,7 +77,7 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                 yield _sse("error", {"message": "temporarily unavailable", "code": 503})
                 return
 
-            log_question(
+            question_id = log_question(
                 conn, catalog_id=catalog_id, question=body.question,
                 answered=covered, confidence=confidence, ip=ip,
             )
@@ -103,18 +103,26 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                     for i, h in enumerate(hits, 1)
                 ],
             )
+            answer_parts: list[str] = []
+            cost = None
             try:
                 answer_gen = stream_answer(
                     conn, catalog_id=catalog_id, query=body.question, hits=hits
                 )
                 while True:
-                    yield _sse("delta", {"text": next(answer_gen)})
-            except StopIteration:
-                pass
+                    part = next(answer_gen)
+                    answer_parts.append(part)
+                    yield _sse("delta", {"text": part})
+            except StopIteration as done:
+                _usage, cost = done.value
             except SpendBlocked:
                 yield _sse("error", {"message": "temporarily unavailable", "code": 503})
                 conn.commit()
                 return
+            record_answer(
+                conn, question_id=question_id, answer="".join(answer_parts),
+                hits=hits, cost_usd=cost,
+            )
             conn.commit()
             yield _sse("done", {"answered": True})
 

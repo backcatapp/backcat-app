@@ -235,12 +235,12 @@ def search(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
 @app.command()
 def ask(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
     """Grounded, cited answer streamed to the terminal (Claude, grounded-only)."""
-    from .answering import _ts, log_question, retrieve, stream_answer
+    from .answering import _ts, log_question, record_answer, retrieve, stream_answer
 
     with connect() as conn:
         catalog_id = _resolve_catalog(conn, catalog)
         hits, confidence, covered = retrieve(conn, catalog_id=catalog_id, query=query, k=k)
-        log_question(
+        question_id = log_question(
             conn, catalog_id=catalog_id, question=query, answered=covered, confidence=confidence
         )
         if not covered:
@@ -248,11 +248,16 @@ def ask(catalog: str, query: str, k: int = typer.Option(6, "--k")) -> None:
             typer.echo("not covered by this catalog (honest absence) — question logged as a gap")
             return
         gen = stream_answer(conn, catalog_id=catalog_id, query=query, hits=hits)
+        parts: list[str] = []
+        cost = None
         try:
             while True:
-                typer.echo(next(gen), nl=False)
-        except StopIteration:
-            pass
+                part = next(gen)
+                parts.append(part)
+                typer.echo(part, nl=False)
+        except StopIteration as done:
+            _usage, cost = done.value
+        record_answer(conn, question_id=question_id, answer="".join(parts), hits=hits, cost_usd=cost)
         conn.commit()
     typer.echo("\n\nsources:")
     for i, h in enumerate(hits, 1):
