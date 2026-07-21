@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import { sql } from "@/lib/db";
+import { addYoutubeChannel } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,8 @@ type CatalogRow = {
 };
 
 export default async function DashboardPage() {
+  const session = await auth();
+  const isAdmin = session?.roles?.includes("admin");
   const catalogs = (await sql`
     SELECT c.id, c.name, c.paused,
       (SELECT count(*)::int FROM episodes e WHERE e.catalog_id = c.id) AS episodes,
@@ -40,6 +44,32 @@ export default async function DashboardPage() {
     <>
       <h1>Catalogs</h1>
       <p className="dash-sub">Ingest status straight from the job table — this page is the pipeline.</p>
+
+      {isAdmin && (
+        <form
+          action={addYoutubeChannel}
+          className="catalog-row-actions"
+          style={{ marginBottom: 24, maxWidth: 560 }}
+        >
+          <input
+            name="channel_url"
+            className="chat-input"
+            style={{
+              flex: 1,
+              background: "var(--card)",
+              border: "1px solid var(--line-2)",
+              borderRadius: 10,
+              padding: "9px 14px",
+              fontSize: 14,
+            }}
+            placeholder="YouTube channel URL or @handle…"
+            aria-label="YouTube channel URL"
+          />
+          <button className="btn" style={{ padding: "9px 16px" }}>
+            Add channel
+          </button>
+        </form>
+      )}
 
       <div className="stat-row">
         <div className="stat">

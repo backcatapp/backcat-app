@@ -156,7 +156,12 @@ def run(
     """Work through queued jobs for a catalog (by id or name), stage by stage."""
 
     def _download(conn, episode_id: str, audio_url: str) -> str:
-        path = download_episode(episode_id, audio_url)
+        if audio_url.startswith("youtube:"):
+            from .youtube import download_youtube
+
+            path = download_youtube(episode_id, audio_url.removeprefix("youtube:"))
+        else:
+            path = download_episode(episode_id, audio_url)
         return f"({path.stat().st_size >> 20}MB)"
 
     def _transcribe(conn, episode_id: str, audio_url: str) -> str:
@@ -180,6 +185,39 @@ def run(
     _run_stage(catalog, "transcribe", _transcribe, episode)
     _run_stage(catalog, "chunk", _chunk, episode)
     _run_stage(catalog, "embed", _embed, episode)
+
+
+@app.command(name="add-channel")
+def add_channel_cmd(url: str) -> None:
+    """Add a YouTube channel by URL/@handle/id — lists recent videos, queues nothing."""
+    from .youtube import add_channel
+
+    with connect() as conn:
+        catalog_id, name, n = add_channel(conn, url)
+    typer.echo(f"channel '{name}' ({catalog_id}): {n} videos listed — select episodes to transcribe")
+
+
+@app.command()
+def worker(interval: int = typer.Option(10, "--interval", help="Poll seconds")) -> None:
+    """Process queued jobs continuously — makes dashboard buttons live.
+
+    Still no queue framework: this polls the same job rows the CLI uses.
+    """
+    typer.echo(f"worker: polling every {interval}s (ctrl-c to stop)")
+    while True:
+        with connect() as conn:
+            cats = [
+                r[0]
+                for r in conn.execute(
+                    "SELECT DISTINCT catalog_id FROM jobs WHERE status = 'queued'"
+                ).fetchall()
+            ]
+        for catalog_id in cats:
+            try:
+                run(catalog=catalog_id, episode=None)
+            except typer.Exit:
+                pass  # spend guard tripped — keep polling; it may be lifted via config
+        time.sleep(interval)
 
 
 @app.command()

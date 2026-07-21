@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { sql } from "@/lib/db";
-import { retryFailed, reindexTranscribe, togglePause } from "../../actions";
+import { queueEpisode, retryFailed, reindexTranscribe, togglePause } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -68,12 +68,18 @@ export default async function CatalogPage({ params }: { params: Promise<{ id: st
                 </td>
                 <td className="mono">{e.duration_s ? `${Math.round(Number(e.duration_s))}s` : "—"}</td>
                 <td>
-                  {jobs.map((j) => (
-                    <span key={j.stage} className={`chip ${j.status}`}>
-                      {j.stage}: {j.status}
-                      {j.attempts > 1 ? ` (${j.attempts})` : ""}
-                    </span>
-                  ))}
+                  {jobs.length === 0 && isAdmin ? (
+                    <form action={queueEpisode.bind(null, e.id as string)}>
+                      <button className="btn-ghost">Transcribe</button>
+                    </form>
+                  ) : (
+                    jobs.map((j) => (
+                      <span key={j.stage} className={`chip ${j.status}`}>
+                        {j.stage}: {j.status}
+                        {j.attempts > 1 ? ` (${j.attempts})` : ""}
+                      </span>
+                    ))
+                  )}
                 </td>
                 <td className="mono">${Number(e.cost).toFixed(4)}</td>
               </tr>

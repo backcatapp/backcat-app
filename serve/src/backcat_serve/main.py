@@ -15,7 +15,7 @@ SSE protocol on POST /api/catalogs/{id}/ask:
 import json
 import os
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -46,6 +46,29 @@ def _sse(event: str, data) -> str:
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
+
+
+# Internal endpoints: called server-to-server by the dashboard's Server Actions
+# (which enforce the admin role). Shared-token gate, never exposed to browsers.
+INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "dev-internal-token")
+
+
+class ChannelBody(BaseModel):
+    url: str = Field(min_length=2, max_length=300)
+
+
+@app.post("/api/internal/channels")
+def add_channel_endpoint(body: ChannelBody, request: Request):
+    if request.headers.get("x-internal-token") != INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="bad internal token")
+    from backcat_pipeline.youtube import add_channel
+
+    with connect() as conn:
+        try:
+            catalog_id, name, n = add_channel(conn, body.url)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+    return {"catalog_id": catalog_id, "name": name, "episodes": n}
 
 
 @app.post("/api/catalogs/{catalog_id}/ask")

@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { sql } from "@/lib/db";
@@ -7,6 +8,46 @@ import { sql } from "@/lib/db";
 async function requireAdmin() {
   const session = await auth();
   if (!session?.roles?.includes("admin")) throw new Error("forbidden: admin role required");
+}
+
+// Mirrors backcat_pipeline.ids.det_id — keep in sync.
+function detId(...parts: string[]): string {
+  return createHash("sha256").update(parts.join("|")).digest("hex").slice(0, 16);
+}
+
+const SERVE_INTERNAL = process.env.SERVE_INTERNAL_URL ?? "http://localhost:8000";
+const INTERNAL_TOKEN = process.env.INTERNAL_TOKEN ?? "dev-internal-token";
+
+export async function addYoutubeChannel(formData: FormData) {
+  await requireAdmin();
+  const url = String(formData.get("channel_url") ?? "").trim();
+  if (!url) return;
+  const resp = await fetch(`${SERVE_INTERNAL}/api/internal/channels`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-internal-token": INTERNAL_TOKEN },
+    body: JSON.stringify({ url }),
+  });
+  if (!resp.ok) {
+    const detail = await resp.text();
+    throw new Error(`could not add channel: ${detail.slice(0, 200)}`);
+  }
+  revalidatePath("/dashboard");
+}
+
+const STAGES = ["download", "transcribe", "chunk", "embed"] as const;
+
+export async function queueEpisode(episodeId: string) {
+  await requireAdmin();
+  const [ep] = await sql`SELECT catalog_id FROM episodes WHERE id = ${episodeId}`;
+  if (!ep) return;
+  for (const stage of STAGES) {
+    await sql`
+      INSERT INTO jobs (id, catalog_id, episode_id, stage)
+      VALUES (${detId(episodeId, stage)}, ${ep.catalog_id}, ${episodeId}, ${stage})
+      ON CONFLICT (episode_id, stage) DO NOTHING
+    `;
+  }
+  revalidatePath(`/dashboard/catalogs/${ep.catalog_id}`);
 }
 
 async function setConfig(key: string, value: unknown) {
