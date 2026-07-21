@@ -17,14 +17,17 @@ app = typer.Typer(no_args_is_help=True, add_completion=False)
 
 
 @app.command()
-def add(rss_url: str) -> None:
-    """Parse an RSS feed, upsert catalog + episodes, queue download/transcribe jobs."""
+def add(
+    rss_url: str,
+    limit: int = typer.Option(None, "--limit", help="Only queue the N most recent episodes"),
+) -> None:
+    """Parse an RSS feed, upsert catalog + episodes, queue pipeline jobs."""
     with connect() as conn:
-        catalog_id, n = add_catalog(conn, rss_url)
-    typer.echo(f"catalog {catalog_id}: {n} episodes upserted, jobs queued")
+        catalog_id, n, queued = add_catalog(conn, rss_url, limit=limit)
+    typer.echo(f"catalog {catalog_id}: {n} episodes upserted, {queued} queued for processing")
 
 
-def _claim_jobs(conn, catalog: str, stage: str) -> list[tuple]:
+def _claim_jobs(conn, catalog: str, stage: str, episode: str | None) -> list[tuple]:
     return conn.execute(
         """
         SELECT j.id, j.episode_id, e.audio_url
@@ -33,16 +36,17 @@ def _claim_jobs(conn, catalog: str, stage: str) -> list[tuple]:
         JOIN catalogs c ON c.id = j.catalog_id
         WHERE (c.id = %s OR c.name = %s) AND c.paused = FALSE
           AND j.stage = %s AND j.status = 'queued'
+          AND (%s::text IS NULL OR j.episode_id = %s)
         ORDER BY e.published_at NULLS LAST
         """,
-        (catalog, catalog, stage),
+        (catalog, catalog, stage, episode, episode),
     ).fetchall()
 
 
-def _run_stage(catalog: str, stage: str, worker) -> None:
+def _run_stage(catalog: str, stage: str, worker, episode: str | None = None) -> None:
     with connect() as conn:
         max_attempts = int(get_config(conn, "max_job_attempts"))
-        jobs = _claim_jobs(conn, catalog, stage)
+        jobs = _claim_jobs(conn, catalog, stage, episode)
         typer.echo(f"{stage}: {len(jobs)} queued")
         for job_id, episode_id, audio_url in jobs:
             conn.execute(
@@ -86,7 +90,10 @@ def _catalog_of(conn, episode_id: str) -> str:
 
 
 @app.command()
-def run(catalog: str) -> None:
+def run(
+    catalog: str,
+    episode: str = typer.Option(None, "--episode", help="Process only this episode id"),
+) -> None:
     """Work through queued jobs for a catalog (by id or name), stage by stage."""
 
     def _download(conn, episode_id: str, audio_url: str) -> str:
@@ -110,10 +117,10 @@ def run(catalog: str) -> None:
         )
         return f"({n} chunks, {tokens} tokens)"
 
-    _run_stage(catalog, "download", _download)
-    _run_stage(catalog, "transcribe", _transcribe)
-    _run_stage(catalog, "chunk", _chunk)
-    _run_stage(catalog, "embed", _embed)
+    _run_stage(catalog, "download", _download, episode)
+    _run_stage(catalog, "transcribe", _transcribe, episode)
+    _run_stage(catalog, "chunk", _chunk, episode)
+    _run_stage(catalog, "embed", _embed, episode)
 
 
 @app.command()

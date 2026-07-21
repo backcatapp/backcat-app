@@ -9,8 +9,10 @@ from .ids import det_id
 STAGES = ("download", "transcribe", "chunk", "embed")
 
 
-def add_catalog(conn, rss_url: str) -> tuple[str, int]:
-    """Parse the feed, upsert catalog + episodes, queue day-4 jobs. Returns (catalog_id, n_episodes)."""
+def add_catalog(conn, rss_url: str, limit: int | None = None) -> tuple[str, int, int]:
+    """Parse the feed, upsert catalog + all episodes; queue jobs for the `limit`
+    most recent episodes (all of them when limit is None).
+    Returns (catalog_id, n_episodes, n_queued)."""
     feed = feedparser.parse(rss_url)
     if feed.bozo and not feed.entries:
         raise ValueError(f"could not parse feed: {feed.bozo_exception}")
@@ -25,7 +27,7 @@ def add_catalog(conn, rss_url: str) -> tuple[str, int]:
         (catalog_id, name, rss_url),
     )
 
-    count = 0
+    episodes: list[tuple[str, datetime | None]] = []
     for entry in feed.entries:
         guid = entry.get("id") or entry.get("link")
         enclosures = [e for e in entry.get("enclosures", []) if "audio" in e.get("type", "")]
@@ -43,6 +45,11 @@ def add_catalog(conn, rss_url: str) -> tuple[str, int]:
             """,
             (episode_id, catalog_id, guid, entry.get("title", guid), enclosures[0]["href"], published),
         )
+        episodes.append((episode_id, published))
+
+    episodes.sort(key=lambda t: (t[1] is not None, t[1]), reverse=True)
+    to_queue = episodes if limit is None else episodes[:limit]
+    for episode_id, _ in to_queue:
         for stage in STAGES:
             conn.execute(
                 """
@@ -52,6 +59,5 @@ def add_catalog(conn, rss_url: str) -> tuple[str, int]:
                 """,
                 (det_id(episode_id, stage), catalog_id, episode_id, stage),
             )
-        count += 1
     conn.commit()
-    return catalog_id, count
+    return catalog_id, len(episodes), len(to_queue)
