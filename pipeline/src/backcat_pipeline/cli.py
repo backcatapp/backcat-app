@@ -213,8 +213,18 @@ def worker(interval: int = typer.Option(10, "--interval", help="Poll seconds")) 
     Still no queue framework: this polls the same job rows the CLI uses.
     """
     typer.echo(f"worker: polling every {interval}s (ctrl-c to stop)")
+    import json as _json
+    from datetime import datetime, timezone
+
     while True:
         with connect() as conn:
+            # Heartbeat: the dashboard Jobs page shows whether a worker is alive
+            conn.execute(
+                "INSERT INTO app_config (key, value) VALUES ('worker.last_seen', %s) "
+                "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()",
+                (_json.dumps(datetime.now(timezone.utc).isoformat()),),
+            )
+            conn.commit()
             cats = [
                 r[0]
                 for r in conn.execute(

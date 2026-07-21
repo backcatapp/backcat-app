@@ -36,6 +36,15 @@ export async function addYoutubeChannel(formData: FormData) {
 
 const STAGES = ["download", "transcribe", "chunk", "embed", "graph"] as const;
 
+export async function retryJob(jobId: string) {
+  await requireAdmin();
+  await sql`
+    UPDATE jobs SET status = 'queued', attempt_count = 0, error = NULL
+    WHERE id = ${jobId} AND status IN ('failed', 'done')
+  `;
+  revalidatePath("/dashboard/jobs");
+}
+
 export async function queueEpisode(episodeId: string) {
   await requireAdmin();
   const [ep] = await sql`SELECT catalog_id FROM episodes WHERE id = ${episodeId}`;
