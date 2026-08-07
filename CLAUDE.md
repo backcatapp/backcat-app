@@ -32,9 +32,10 @@ Product docs live in the Obsidian vault at `G:\Obsidian\MyNet\10 Projects\Backca
 
 ## Local dev
 
-- `docker compose up -d` — Postgres+pgvector (5432) and Neo4j (7474/7687) — see `docker-compose.yml`.
-- `web/`: `npm run dev` · build check: `npm run build`.
-- Python dirs (`pipeline/`, `serve/`, `eval/`) get their tooling on day 4 — check their READMEs.
+- `docker compose up -d` — the whole stack: Postgres+pgvector (5432), Neo4j (7474/7687), Keycloak (8080), the query API (`serve/`, 8000), the ingestion worker, and the dashboard (`web/`, 3000). One command, no separate `npm run dev` / `uvicorn` terminals needed.
+- These are **built** images, not hot-reloading dev servers — after a code change, `docker compose up -d --build <service>` to pick it up. For fast iteration on one service, run it directly on the host instead (`npm run dev` in `web/`; `uvicorn backcat_serve.main:app --reload` in `serve/`) while leaving the rest on Docker.
+- First run (or after a full reset): migrations and Neo4j constraints apply automatically via the `worker` service's startup command — no manual `migrate` step needed.
+- Real secrets (`GROQ_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) live in `pipeline/.env`, consumed by `serve`/`worker` via compose `env_file`; web's own secrets live in `web/.env.local`. Neither is baked into the images.
 
 ## Sprint workflow
 

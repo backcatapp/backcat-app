@@ -43,6 +43,12 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: backcatdev
+      # Pin the issuer Keycloak reports to the browser-facing URL regardless
+      # of which network path (internal DNS vs. published port) reached it —
+      # otherwise the `iss` claim tracks whichever hostname the authorization
+      # request used, and mismatches whatever the token-exchange side expects.
+      # See auth.ts for how the web container still reaches this internally.
+      KC_HOSTNAME: http://localhost:8080
     ports:
       - "8080:8080"
     volumes:
@@ -51,6 +57,91 @@ services:
       # are throwaway.
       - ./infra/keycloak:/opt/keycloak/data/import:ro
 
+  # --- app services: `docker compose up -d` is the whole stack, no separate
+  # `npm run dev` / `uvicorn` terminals needed. Trade-off: this is a *built*
+  # image, not a hot-reloading dev server — after a code change, rebuild the
+  # affected service (`docker compose up -d --build <service>`). Use
+  # `npm run dev` / a bare `uvicorn` directly on the host instead when you
+  # want live reload during active iteration on one service.
+
+  serve:
+    build:
+      context: .
+      dockerfile: pipeline/Dockerfile
+    container_name: backcat-serve
+    command: uvicorn backcat_serve.main:app --host 0.0.0.0 --port 8000
+    working_dir: /app/serve
+    env_file:
+      - pipeline/.env
+    environment:
+      DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
+      NEO4J_URI: bolt://neo4j:7687
+      CORS_ORIGIN: http://localhost:3000
+      INTERNAL_TOKEN: dev-internal-token
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: pipeline/Dockerfile
+    container_name: backcat-worker
+    # migrate + Neo4j constraints on every start — both idempotent (migrate
+    # tracks applied files; MERGE-based constraints are a no-op if present).
+    command: >
+      sh -c "migrate &&
+      python -c 'from backcat_pipeline.graph import ensure_constraints; ensure_constraints()' &&
+      ingest worker --interval 5"
+    env_file:
+      - pipeline/.env
+    environment:
+      DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
+      NEO4J_URI: bolt://neo4j:7687
+    volumes:
+      - pipelinedata:/app/pipeline/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+    container_name: backcat-web
+    env_file:
+      - web/.env.local
+    environment:
+      DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
+      # Without this, Auth.js infers the app's own URL from the request in a
+      # way that resolved to the container's Docker hostname instead of
+      # localhost — breaking the OAuth redirect_uri Keycloak checks against.
+      AUTH_URL: http://localhost:3000
+      # Keycloak's issuer identity (KC_HOSTNAME, see above) — every URL in
+      # this container (discovery, authorization, token, jwks) is built from
+      # this string, so it must be the browser-facing one for the `iss`
+      # claim to validate. AUTH_KEYCLOAK_INTERNAL_HOST tells auth.ts's
+      # customFetch to actually route those requests to the internal
+      # service DNS name instead of localhost, which doesn't resolve inside
+      # this container.
+      AUTH_KEYCLOAK_ISSUER: http://localhost:8080/realms/backcat
+      AUTH_KEYCLOAK_INTERNAL_HOST: keycloak:8080
+      SERVE_INTERNAL_URL: http://serve:8000
+      INTERNAL_TOKEN: dev-internal-token
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+
 volumes:
   pgdata:
   neo4jdata:
+  pipelinedata:

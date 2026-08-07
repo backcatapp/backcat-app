@@ -1,0 +1,11 @@
+# Shared root-context ignores (pipeline/serve build with context: .)
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/.next
+.git
+**/.env
+**/.env.*
+!**/.env.example
+pipeline/data
