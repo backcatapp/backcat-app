@@ -14,6 +14,10 @@ dependencies = [
     "neo4j>=5.0",
 ]
 
+[project.optional-dependencies]
+rerank = ["sentence-transformers>=3.0"]
+eval = ["sentence-transformers>=3.0"]
+
 [project.scripts]
 ingest = "backcat_pipeline.cli:app"
 migrate = "backcat_pipeline.migrate:main"

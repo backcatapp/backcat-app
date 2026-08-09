@@ -1,0 +1,22 @@
+[project]
+name = "backcat-eval"
+version = "0.1.0"
+description = "Golden-set eval harness: baseline hybrid RAG vs graph-enhanced retrieval, hit@5/MRR/recall@5, per category"
+requires-python = ">=3.10"
+dependencies = [
+    "backcat-pipeline",
+    "typer>=0.12",
+]
+
+[project.scripts]
+backcat-eval = "backcat_eval.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/backcat_eval"]
+
+[tool.hatch.metadata]
+allow-direct-references = true

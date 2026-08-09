@@ -255,6 +255,63 @@ def episode_topics(episode_id: str) -> dict:
     return {"categories": categories}
 
 
+def recurring_entities(
+    catalog_id: str, min_episodes: int = 2, min_mentions: int = 3, limit: int = 50
+) -> list[dict]:
+    """Entities mentioned across >= min_episodes distinct episodes (day 10 golden
+    set): a single chunk can't answer "everything said about X" when X spans
+    multiple episodes — this is the aggregation-question source."""
+    with get_driver().session() as s:
+        return s.run(
+            f"""
+            MATCH (n)-[:MENTIONED_IN]->(ch:Chunk {{catalog_id: $cid}})
+            WHERE {_ENTITY}
+            WITH n, count(DISTINCT ch) AS mentions, count(DISTINCT ch.episode_id) AS episodes
+            WHERE episodes >= $min_episodes AND mentions >= $min_mentions
+            RETURN n.uid AS uid, n.name AS name, labels(n)[0] AS label, mentions, episodes
+            ORDER BY episodes DESC, mentions DESC LIMIT $limit
+            """,
+            cid=catalog_id, min_episodes=min_episodes, min_mentions=min_mentions, limit=limit,
+        ).data()
+
+
+def entity_mention_chunks(uid: str, limit: int = 8) -> list[dict]:
+    """Direct MENTIONED_IN chunks for one entity, spread across episodes."""
+    with get_driver().session() as s:
+        return s.run(
+            """
+            MATCH (n {uid: $uid})-[:MENTIONED_IN]->(ch:Chunk)
+            RETURN DISTINCT ch.id AS chunk_id, ch.episode_id AS episode_id, ch.start_s AS start_s
+            ORDER BY ch.episode_id, ch.start_s LIMIT $limit
+            """,
+            uid=uid, limit=limit,
+        ).data()
+
+
+def cooccurring_pairs(catalog_id: str, limit: int = 50) -> list[dict]:
+    """Entity pairs sharing >=1 chunk where each ALSO has mentions apart from
+    the other (day 10 golden set): answering fully requires connecting info
+    that isn't all in one place — the multi-hop-question source."""
+    with get_driver().session() as s:
+        return s.run(
+            f"""
+            MATCH (a)-[:MENTIONED_IN]->(ch:Chunk {{catalog_id: $cid}})<-[:MENTIONED_IN]-(b)
+            WHERE ({_ENTITY.replace("n:", "a:")}) AND ({_ENTITY.replace("n:", "b:")}) AND a.uid < b.uid
+            WITH a, b, collect(DISTINCT ch.id) AS shared
+            MATCH (a)-[:MENTIONED_IN]->(ca:Chunk) WHERE NOT ca.id IN shared
+            WITH a, b, shared, collect(DISTINCT ca.id) AS a_only
+            MATCH (b)-[:MENTIONED_IN]->(cb:Chunk) WHERE NOT cb.id IN shared
+            WITH a, b, shared, a_only, collect(DISTINCT cb.id) AS b_only
+            WHERE size(a_only) >= 1 AND size(b_only) >= 1
+            RETURN a.uid AS a_uid, a.name AS a_name, b.uid AS b_uid, b.name AS b_name,
+                   shared[0..3] AS shared_chunks, a_only[0..2] AS a_only_chunks,
+                   b_only[0..2] AS b_only_chunks
+            LIMIT $limit
+            """,
+            cid=catalog_id, limit=limit,
+        ).data()
+
+
 def _entity_matches(query: str, names: list[dict]) -> list[str]:
     """Token-overlap entity linking: an entity matches when the full name is in
     the query, or ≥ half its significant tokens appear in the query."""

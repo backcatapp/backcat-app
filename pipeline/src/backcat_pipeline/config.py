@@ -46,6 +46,9 @@ _DEFAULTS: dict[str, Any] = {
     # Below this dense cosine similarity, retrieval is treated as no-coverage
     # (honest absence). Placeholder until the day-7 eval harness tunes it.
     "retrieval.min_dense_similarity": 0.2,
+    # Day-10 golden-set benchmark decides this, not preference — see docs/ARCHITECTURE.md.
+    "retrieval.use_reranker": False,
+    "retrieval.rerank_pool": 30,
     "model.answering": "claude-sonnet-5",
     "answering_usd_per_mtok_in": 3.0,
     "answering_usd_per_mtok_out": 15.0,

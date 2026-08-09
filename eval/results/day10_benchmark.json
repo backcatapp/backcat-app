@@ -1,0 +1,2202 @@
+[
+  {
+    "id": "sf_f8c14a671b039e44",
+    "category": "single_fact",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_63b89be6dd597f6c",
+    "category": "single_fact",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_c07dee1994ea40d1",
+    "category": "single_fact",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_34b3e2961aebbf14",
+    "category": "single_fact",
+    "scored": 36,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_3fbf924729ced3ca",
+    "category": "single_fact",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_3dbe1bb068d58865",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_c27001ccb9de4632",
+    "category": "single_fact",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    }
+  },
+  {
+    "id": "sf_28ac230cb3a96ba0",
+    "category": "single_fact",
+    "scored": 32,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_997cd69bf636016b",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_a883f2f01154c0d1",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_3c39339650692038",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_d440301a6388d3a2",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_e443ec8101c1f19d",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_70e97a5f3e540681",
+    "category": "single_fact",
+    "scored": 34,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_824b140d3b92cdea",
+    "category": "single_fact",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_26ae331a0e8e41be",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_8bb003d2b3f4514d",
+    "category": "single_fact",
+    "scored": 40,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_1579eb1867fc8eaa",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_d261fe186223de90",
+    "category": "single_fact",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_25fd7436e7cd2703",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_3834bdeb3fd2d689",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_bf4128a050f8f76a",
+    "category": "single_fact",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_6b4e5d00fe6e7d8c",
+    "category": "single_fact",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_d7a0a7f03da54185",
+    "category": "single_fact",
+    "scored": 37,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_d1fcf495cb95b973",
+    "category": "single_fact",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_c91bc4f368017180",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_6d64686fbc8846ff",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_6c7b5715bce05fdc",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_579094ab130f7ff8",
+    "category": "single_fact",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_f914501b1b46485d",
+    "category": "single_fact",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_78483393ecfd0fec",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_24f0c04f50d094b4",
+    "category": "single_fact",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_1786936cf71d814a",
+    "category": "single_fact",
+    "scored": 40,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_4b40d273c7dfc0e0",
+    "category": "single_fact",
+    "scored": 36,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_928d7b9dd54bfe19",
+    "category": "single_fact",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_2fb9d5a73e6f9f61",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_073d3097940bb335",
+    "category": "single_fact",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_f9738df821e3d5d7",
+    "category": "single_fact",
+    "scored": 38,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_f5a88f6265834aae",
+    "category": "single_fact",
+    "scored": 42,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "sf_f70c88045c4f26cd",
+    "category": "single_fact",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:متودولوژی مشترک",
+    "category": "aggregation",
+    "scored": 34,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.4
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.8
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.8
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.8
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:اینستاگرام",
+    "category": "aggregation",
+    "scored": 37,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.8333333333333334
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:پول زنانه",
+    "category": "aggregation",
+    "scored": 34,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:پارادوکس زنان ایرانی",
+    "category": "aggregation",
+    "scored": 41,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5714285714285714
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.7142857142857143
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5714285714285714
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5714285714285714
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:آشفتگی تئوریک",
+    "category": "aggregation",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:سرمایه اقتصادی",
+    "category": "aggregation",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:استقلال و توسعه",
+    "category": "aggregation",
+    "scored": 34,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:شبکه‌های اجتماعی",
+    "category": "aggregation",
+    "scored": 41,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:سیستم‌های ناویگیشن",
+    "category": "aggregation",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:کنش های اقتصادی زنان",
+    "category": "aggregation",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:علوم انسانی",
+    "category": "aggregation",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:جامعه شناسی",
+    "category": "aggregation",
+    "scored": 37,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "ag_6f2ef26393812d69:سرمایه اجتماعی",
+    "category": "aggregation",
+    "scored": 40,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5714285714285714
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.7142857142857143
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.7142857142857143
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.7142857142857143
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:ساختار جنسیت__6f2ef26393812d69:پارادوکس زنان ایرانی",
+    "category": "multi_hop",
+    "scored": 41,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:تناج و هایپر ناج__6f2ef26393812d69:کمیابی و فروختگی",
+    "category": "multi_hop",
+    "scored": 37,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:تکنولوژی اقناعی__6f2ef26393812d69:سیستم توصیه‌گر",
+    "category": "multi_hop",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.3333333333333333
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:استعمار و تاریخ خارجی__6f2ef26393812d69:ترکیه",
+    "category": "multi_hop",
+    "scored": 38,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:جامعه شناسی__6f2ef26393812d69:پارادوکس زنان ایرانی",
+    "category": "multi_hop",
+    "scored": 40,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.25
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:شبکه‌های اجتماعی__6f2ef26393812d69:عادات الگوریتمی",
+    "category": "multi_hop",
+    "scored": 38,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.4
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.8
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:استبداد تاریخی__6f2ef26393812d69:قرارداد اجتماعی",
+    "category": "multi_hop",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.25
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:intellectual diversity__6f2ef26393812d69:social circle influence",
+    "category": "multi_hop",
+    "scored": 36,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.2
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.4
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.4
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:اسکرول کردن بی‌هدف__6f2ef26393812d69:شبکه‌های اجتماعی",
+    "category": "multi_hop",
+    "scored": 38,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.25
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:chatgpt__6f2ef26393812d69:empathy erosion",
+    "category": "multi_hop",
+    "scored": 32,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:اسکرول کردن بی‌هدف__6f2ef26393812d69:فناوری و الگوریتم",
+    "category": "multi_hop",
+    "scored": 37,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:استقلال و توسعه__6f2ef26393812d69:حکمرانی سینوسی",
+    "category": "multi_hop",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:آزادی رسانه__6f2ef26393812d69:تغییر عادت",
+    "category": "multi_hop",
+    "scored": 32,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.25
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:استعمار و تاریخ خارجی__6f2ef26393812d69:جغرافیا و جیوپولیتیک",
+    "category": "multi_hop",
+    "scored": 30,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:اقتصاد دولتی__6f2ef26393812d69:سنگاپور",
+    "category": "multi_hop",
+    "scored": 40,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.4
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:آشفتگی تئوریک__6f2ef26393812d69:حکمرانی سینوسی",
+    "category": "multi_hop",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:قاعده پذیری__6f2ef26393812d69:قرارداد اجتماعی",
+    "category": "multi_hop",
+    "scored": 40,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:حکمرانی سینوسی__6f2ef26393812d69:متودولوژی مشترک",
+    "category": "multi_hop",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:اینستاگرام__6f2ef26393812d69:دیجی‌کالا",
+    "category": "multi_hop",
+    "scored": 41,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.25
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.25
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:جامعه شناسی__6f2ef26393812d69:سرمایه فرهنگی و نمادین",
+    "category": "multi_hop",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.75
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:ethnic diversity in iran__6f2ef26393812d69:intellectual diversity",
+    "category": "multi_hop",
+    "scored": 32,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    },
+    "graph": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.75
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:بسترهای اقتصادی رسمی__6f2ef26393812d69:مدیریت مالی در محدودیت",
+    "category": "multi_hop",
+    "scored": 34,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:انسجام فکری__6f2ef26393812d69:تفاوت‌های فکری",
+    "category": "multi_hop",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.2
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.4
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.8
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:ایران__6f2ef26393812d69:متودولوژی مشترک",
+    "category": "multi_hop",
+    "scored": 32,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.4
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.8
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6
+    }
+  },
+  {
+    "id": "mh_6f2ef26393812d69:سرمایه اقتصادی__6f2ef26393812d69:پارادوکس زنان ایرانی",
+    "category": "multi_hop",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.6666666666666666
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:پارادوکس زنان ایرانی",
+    "category": "temporal",
+    "scored": 43,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.3333333333333333
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.3333333333333333
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.3333333333333333
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:پول زنانه",
+    "category": "temporal",
+    "scored": 31,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:سیستم‌های ناویگیشن",
+    "category": "temporal",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:آشفتگی تئوریک",
+    "category": "temporal",
+    "scored": 36,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:کنش های اقتصادی زنان",
+    "category": "temporal",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:اینستاگرام",
+    "category": "temporal",
+    "scored": 36,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 0,
+      "mrr": 0.0,
+      "recall@k": 0.0
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:سرمایه اقتصادی",
+    "category": "temporal",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 0.3333333333333333
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 0.3333333333333333
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:متودولوژی مشترک",
+    "category": "temporal",
+    "scored": 33,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 1.0,
+      "recall@k": 1.0
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 1.0
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:علوم انسانی",
+    "category": "temporal",
+    "scored": 35,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.25,
+      "recall@k": 0.5
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.5
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.3333333333333333,
+      "recall@k": 0.5
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.5
+    }
+  },
+  {
+    "id": "tm_6f2ef26393812d69:شبکه‌های اجتماعی",
+    "category": "temporal",
+    "scored": 39,
+    "baseline": {
+      "hit@k": 1,
+      "mrr": 0.2,
+      "recall@k": 0.3333333333333333
+    },
+    "baseline+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.3333333333333333
+    },
+    "graph": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.6666666666666666
+    },
+    "graph+rerank": {
+      "hit@k": 1,
+      "mrr": 0.5,
+      "recall@k": 0.3333333333333333
+    }
+  }
+]

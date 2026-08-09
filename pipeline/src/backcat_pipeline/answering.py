@@ -42,20 +42,25 @@ def retrieve(conn, *, catalog_id: str, query: str, k: int = 6) -> tuple[list[Hit
     covered=False means honest absence: no hits, no LLM call — caller logs the
     question as unanswered (gap signal).
     """
-    dense = dense_search(conn, catalog_id, query)
-    keyword = keyword_search(conn, catalog_id, query)
-    graph = graph_search(conn, catalog_id, query)
+    use_rerank = bool(get_config(conn, "retrieval.use_reranker"))
+    pool = int(get_config(conn, "retrieval.rerank_pool")) if use_rerank else k
+    dense = dense_search(conn, catalog_id, query, k=pool)
+    keyword = keyword_search(conn, catalog_id, query, k=pool)
+    graph = graph_search(conn, catalog_id, query, k=pool)
     confidence = dense[0].score if dense else 0.0
     threshold = float(get_config(conn, "retrieval.min_dense_similarity"))
     # A direct graph hit (entity named in the query) also counts as coverage —
     # exact concept matches shouldn't be vetoed by embedding similarity alone.
     if confidence < threshold and not graph:
         return [], confidence, False
-    return (
-        rrf_fuse({"dense": dense, "keyword": keyword, "graph": graph}, k=k),
-        confidence,
-        True,
-    )
+    fused = rrf_fuse({"dense": dense, "keyword": keyword, "graph": graph}, k=pool)
+    if use_rerank:
+        from .rerank import rerank
+
+        fused = rerank(query, fused, top_k=k)
+    else:
+        fused = fused[:k]
+    return fused, confidence, True
 
 
 def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):

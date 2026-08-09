@@ -122,12 +122,21 @@ def rrf_fuse(channels: dict[str, list[Hit]], k: int = 6) -> list[Hit]:
     return sorted(fused.values(), key=lambda h: h.score, reverse=True)[:k]
 
 
-def hybrid_search(conn, catalog_id: str, query: str, k: int = 6) -> list[Hit]:
-    return rrf_fuse(
-        {
-            "dense": dense_search(conn, catalog_id, query),
-            "keyword": keyword_search(conn, catalog_id, query),
-            "graph": graph_search(conn, catalog_id, query),
-        },
-        k=k,
-    )
+def hybrid_search(
+    conn, catalog_id: str, query: str, k: int = 6, *, use_graph: bool = True,
+    use_rerank: bool = False, rerank_pool: int = 30,
+) -> list[Hit]:
+    """Day 10: optional reranker over a wider RRF pool, optional graph channel
+    (use_graph=False reproduces the pre-day-9 baseline for the benchmark)."""
+    channels = {
+        "dense": dense_search(conn, catalog_id, query),
+        "keyword": keyword_search(conn, catalog_id, query),
+    }
+    if use_graph:
+        channels["graph"] = graph_search(conn, catalog_id, query)
+    fused = rrf_fuse(channels, k=rerank_pool if use_rerank else k)
+    if use_rerank:
+        from .rerank import rerank
+
+        return rerank(query, fused, top_k=k)
+    return fused[:k]
