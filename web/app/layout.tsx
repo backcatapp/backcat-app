@@ -24,9 +24,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "backcat | Your back catalog, answering.",
+  title: "backcat | Ask any creator's YouTube catalog",
   description:
-    "We're building a content-intelligence layer for podcasters and creators: every episode becomes one queryable archive, cited to the exact second. Pre-launch — join the waitlist.",
+    "Chrome extension for YouTube — ask a creator's back catalog and get answers cited to the exact second. Early access open.",
 };
 
 export const viewport: Viewport = {

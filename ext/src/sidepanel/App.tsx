@@ -9,6 +9,7 @@ import {
   fetchProfile,
   indexEpisode,
   lookupVideo,
+  requestCredits,
   saveByok,
   saveCatalog,
   unsaveCatalog,
@@ -953,6 +954,8 @@ function ProfileTab(props: {
   const p = props.profile;
   const [name, setName] = useState(p.display_name || "");
   const [key, setKey] = useState("");
+  const [creditMsg, setCreditMsg] = useState<string | null>(null);
+  const [creditBusy, setCreditBusy] = useState(false);
   const usedPct = Math.min(100, Math.round((p.asks_today / Math.max(1, p.daily_cap)) * 100));
 
   return (
@@ -968,17 +971,25 @@ function ProfileTab(props: {
         <button
           class="btn ghost"
           style={{ width: "100%", marginTop: 8 }}
-          onClick={() => {
-            window.open(
-              "mailto:hello@backcat.app?subject=Buy%20more%20Backcat%20credits",
-              "_blank"
-            );
+          disabled={creditBusy}
+          onClick={async () => {
+            setCreditBusy(true);
+            setCreditMsg(null);
+            try {
+              const res = await requestCredits();
+              setCreditMsg(res.message || `Thanks — we'll contact you at ${p.email}.`);
+            } catch (e: unknown) {
+              props.onError(e instanceof Error ? e.message : String(e));
+            } finally {
+              setCreditBusy(false);
+            }
           }}
         >
-          Buy more credits
+          {creditBusy ? "Sending…" : "Request more credits"}
         </button>
         <div class="meta" style={{ marginTop: 6 }}>
-          Checkout (Paddle) lands next — this opens a mailto stub for now.
+          {creditMsg ||
+            "No self-serve checkout yet — we'll email you to arrange credits."}
         </div>
       </div>
 

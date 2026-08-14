@@ -31,8 +31,10 @@ from backcat_pipeline.users import (
     link_catalog,
     list_catalog_episodes,
     list_catalogs,
+    log_user_event,
     profile,
     queue_episode_index,
+    request_credits,
     set_byok,
     set_display_name,
     unlink_saved,
@@ -203,6 +205,25 @@ def unsave_catalog(catalog_id: str, request: Request):
     return {"saved": False, "catalog_id": catalog_id}
 
 
+class CreditRequestBody(BaseModel):
+    note: str | None = Field(default=None, max_length=500)
+
+
+@app.post("/api/me/credit-request")
+def credit_request(request: Request, body: CreditRequestBody = CreditRequestBody()):
+    """Ask us to contact you about buying credits (no self-serve checkout)."""
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        result = request_credits(conn, email=user.email, user_id=user.id, note=body.note)
+        conn.commit()
+    return {
+        "ok": True,
+        "message": f"Thanks — we'll contact you at {user.email} to arrange credits.",
+        **result,
+    }
+
+
 @app.get("/api/videos/{youtube_id}")
 def video_lookup(youtube_id: str, request: Request):
     """Map a YouTube video id → catalog/episode if listed in any catalog.
@@ -355,6 +376,13 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                 try:
                     debit = debit_ask(conn, user_id, commit_credit=False)
                 except QuotaExceeded as exc:
+                    log_user_event(
+                        conn,
+                        user_id=user_id,
+                        email=auth.email,
+                        event="quota_blocked",
+                        props={"catalog_id": catalog_id},
+                    )
                     conn.commit()
                     yield _sse("error", {"message": str(exc), "code": 402})
                     return
@@ -384,6 +412,7 @@ def ask(catalog_id: str, body: AskBody, request: Request):
             question_id = log_question(
                 conn, catalog_id=catalog_id, question=body.question,
                 answered=covered, confidence=confidence, ip=ip, user_id=user_id,
+                debit_mode=debit.mode if debit else None,
             )
             if not covered:
                 conn.commit()

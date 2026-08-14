@@ -1,7 +1,8 @@
+const STORE = process.env.NEXT_PUBLIC_CHROME_STORE_URL || "#install";
+
 const links = [
   { href: "#how", label: "How it works" },
-  { href: "#features", label: "Features" },
-  { href: "#demo", label: "Demo" },
+  { href: "#demo", label: "Screenshots" },
   { href: "#pricing", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
 ];
@@ -13,7 +14,7 @@ export default function Nav() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "14px 6px 40px",
+        padding: "14px 6px 28px",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -34,14 +35,14 @@ export default function Nav() {
           style={{
             fontSize: 10.5,
             letterSpacing: 1,
-            color: "#E8B03E",
-            border: "1px solid rgba(232,176,62,0.35)",
+            color: "var(--orange)",
+            border: "1px solid rgba(255,138,61,0.35)",
             borderRadius: 999,
             padding: "3px 9px",
             textTransform: "uppercase",
           }}
         >
-          Pre-launch
+          Chrome
         </span>
       </div>
       <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 26 }}>
@@ -50,12 +51,8 @@ export default function Nav() {
             {l.label}
           </a>
         ))}
-        <a
-          href="#start"
-          className="btn-primary"
-          style={{ fontSize: 13.5, padding: "10px 18px" }}
-        >
-          Join the waitlist
+        <a href={STORE} className="btn-primary" style={{ fontSize: 13.5, padding: "10px 18px" }}>
+          Add to Chrome
         </a>
       </div>
     </nav>

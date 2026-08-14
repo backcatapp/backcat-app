@@ -20,7 +20,7 @@ function SubmitButton() {
         opacity: pending ? 0.75 : 1,
       }}
     >
-      {pending ? "Adding…" : "Map my catalog →"}
+      {pending ? "Adding…" : "Notify me →"}
     </button>
   );
 }

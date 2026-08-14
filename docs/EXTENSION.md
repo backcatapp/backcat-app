@@ -1,9 +1,9 @@
 # Chrome Extension — product surface
 
 The Chrome extension is the fan/creator product surface. Web keeps the
-landing page + admin dashboard. Fans sign in, save/add channels, ask with
-cited answers, and manage a usage wallet (daily free asks → paid credits →
-BYOK Anthropic key).
+landing page (extension-first) + admin dashboard. Fans sign in, save/add
+channels, ask with cited answers, and manage a usage wallet (daily free asks
+→ paid credits → BYOK Anthropic key).
 
 ## Architecture
 
@@ -14,21 +14,30 @@ ext/ (MV3 side panel + YouTube content script)
 serve/
   │  JWKS validate → users / user_catalogs / questions.user_id
   │  ask debit: free daily → extra_credits → BYOK → 402
+  │  POST /api/me/credit-request → credit_requests (we'll contact you)
 pipeline/
-  └── migrations/007_users.sql
+  └── migrations/007_users.sql, 008_waitlist_and_events.sql
+web/
+  └── landing (Postgres waitlist) + /dashboard Users · Funnel · Costs · Jobs
 ```
 
 ### Surfaces
 
-- **Side panel** — Channels / Ask / Profile (usage meter, BYOK, buy-more mailto stub).
-  Channels expands to list episodes (title → YouTube, indexed vs listed-only badge;
-  Ask disabled until indexed).
-- **YouTube content script** — native-style **Ask** pill in the watch-page actions
-  row (Share / Download / Save). Click opens an in-page right panel (Shadow DOM,
-  Eigengrau + Tabby) for streaming cited answers; citations seek the page `<video>`.
-  Listed-but-not-indexed videos get the pill + a manage/side-panel prompt instead
-  of Ask. `GET /api/videos/{id}` (+ optional Bearer for saved/owned).
+- **Side panel** — Channels / Ask / Graph / Profile. Profile **Request more credits**
+  opens a `credit_requests` row (no checkout — we'll email you).
+- **YouTube content script** — **Backcat** pill → on-page Ask panel (history,
+  keyboard trap); Graph/side panel closes the on-page panel. Episode-scoped graph.
+- **Web landing** — Chrome extension CTA + screenshot slots in `public/landing/`.
 - **Web `/c/{id}`** — anonymous share page still works (IP rate limit).
+
+### Admin dashboard (Keycloak `admin`)
+
+| Path | Purpose |
+|------|---------|
+| `/dashboard/users` | Users + waitlist-only; credit-request inbox on detail |
+| `/dashboard/funnel` | Waitlist → signup → save → index → ask |
+| `/dashboard/costs` | Daily / service / catalog spend from `cost_events` |
+| `/dashboard/jobs` | Failed-first filter, retry, retry-all failed |
 
 ### Auth & usage
 
@@ -38,8 +47,8 @@ pipeline/
 - `rate_limit.questions_per_user_per_day` (default 10) → then `users.extra_credits`
   → then encrypted BYOK (`users.byok_anthropic_enc`, Fernet + `BYOK_SECRET`).
 - Adding a channel from the extension lists RSS episodes; **Index** on a video
-  queues Whisper→embed→graph (worker must be running; ~$0.04/audio-hour).
-  Kill-switch still applies.
+  queues Whisper→embed→graph (`jobs.requested_by` stamped). Worker must be running.
+- Landing waitlist → Postgres `waitlist` (not Supabase).
 
 ### CORS
 

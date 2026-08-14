@@ -48,6 +48,7 @@ def decrypt_byok(ciphertext: str) -> str:
 
 
 def upsert_user(conn, *, user_id: str, email: str, display_name: str | None = None) -> None:
+    existing = conn.execute("SELECT 1 FROM users WHERE id = %s", (user_id,)).fetchone()
     conn.execute(
         """
         INSERT INTO users (id, email, display_name)
@@ -59,6 +60,85 @@ def upsert_user(conn, *, user_id: str, email: str, display_name: str | None = No
         """,
         (user_id, email, display_name),
     )
+    if existing is None:
+        log_user_event(conn, user_id=user_id, email=email, event="signed_in")
+
+
+def log_user_event(
+    conn,
+    *,
+    event: str,
+    user_id: str | None = None,
+    email: str | None = None,
+    props: dict | None = None,
+) -> None:
+    import json
+
+    conn.execute(
+        """
+        INSERT INTO user_events (user_id, email, event, props)
+        VALUES (%s, %s, %s, %s::jsonb)
+        """,
+        (
+            user_id,
+            email.lower() if email else None,
+            event,
+            json.dumps(props or {}, ensure_ascii=False),
+        ),
+    )
+
+
+def request_credits(
+    conn,
+    *,
+    email: str,
+    user_id: str | None = None,
+    note: str | None = None,
+) -> dict:
+    """Open a credit request (one open row per email). Returns the row status."""
+    email_l = email.strip().lower()
+    note_s = (note or "").strip() or None
+    existing = conn.execute(
+        "SELECT id::text, status, email FROM credit_requests "
+        "WHERE lower(email) = %s AND status = 'open'",
+        (email_l,),
+    ).fetchone()
+    if existing:
+        conn.execute(
+            """
+            UPDATE credit_requests SET
+                user_id = COALESCE(%s, user_id),
+                note = COALESCE(%s, note),
+                updated_at = now()
+            WHERE id = %s::uuid
+            """,
+            (user_id, note_s, existing[0]),
+        )
+        log_user_event(
+            conn,
+            user_id=user_id,
+            email=email_l,
+            event="credit_requested",
+            props={"request_id": existing[0], "existing": True},
+        )
+        return {"id": existing[0], "status": existing[1], "email": existing[2]}
+
+    row = conn.execute(
+        """
+        INSERT INTO credit_requests (user_id, email, note, status)
+        VALUES (%s, %s, %s, 'open')
+        RETURNING id::text, status, email
+        """,
+        (user_id, email_l, note_s),
+    ).fetchone()
+    log_user_event(
+        conn,
+        user_id=user_id,
+        email=email_l,
+        event="credit_requested",
+        props={"request_id": row[0]},
+    )
+    return {"id": row[0], "status": row[1], "email": row[2]}
 
 
 def questions_today(conn, user_id: str) -> int:
@@ -161,7 +241,7 @@ def debit_ask(conn, user_id: str, *, commit_credit: bool = True) -> AskDebit:
 def link_catalog(conn, user_id: str, catalog_id: str, kind: str) -> None:
     if kind not in ("owned", "saved"):
         raise ValueError(f"bad kind {kind}")
-    conn.execute(
+    cur = conn.execute(
         """
         INSERT INTO user_catalogs (user_id, catalog_id, kind)
         VALUES (%s, %s, %s)
@@ -169,13 +249,31 @@ def link_catalog(conn, user_id: str, catalog_id: str, kind: str) -> None:
         """,
         (user_id, catalog_id, kind),
     )
+    if cur.rowcount:
+        email = conn.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()
+        log_user_event(
+            conn,
+            user_id=user_id,
+            email=email[0] if email else None,
+            event="catalog_owned" if kind == "owned" else "catalog_saved",
+            props={"catalog_id": catalog_id},
+        )
 
 
 def unlink_saved(conn, user_id: str, catalog_id: str) -> None:
-    conn.execute(
+    cur = conn.execute(
         "DELETE FROM user_catalogs WHERE user_id = %s AND catalog_id = %s AND kind = 'saved'",
         (user_id, catalog_id),
     )
+    if cur.rowcount:
+        email = conn.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()
+        log_user_event(
+            conn,
+            user_id=user_id,
+            email=email[0] if email else None,
+            event="catalog_unsaved",
+            props={"catalog_id": catalog_id},
+        )
 
 
 def list_catalogs(conn, user_id: str) -> list[dict]:
@@ -271,21 +369,29 @@ def queue_episode_index(conn, user_id: str, episode_id: str) -> dict:
     for stage in STAGES:
         cur = conn.execute(
             """
-            INSERT INTO jobs (id, catalog_id, episode_id, stage)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO jobs (id, catalog_id, episode_id, stage, requested_by)
+            VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (episode_id, stage) DO NOTHING
             """,
-            (det_id(episode_id, stage), catalog_id, episode_id, stage),
+            (det_id(episode_id, stage), catalog_id, episode_id, stage, user_id),
         )
         queued += cur.rowcount or 0
-    # If jobs already existed as failed/done, re-queue missing stages only via
-    # ON CONFLICT DO NOTHING — for re-index of failed, bump failed→queued:
+    # Stamp requester on any stages we re-queue from failed
     conn.execute(
         """
-        UPDATE jobs SET status = 'queued', attempt_count = 0, error = NULL
+        UPDATE jobs SET status = 'queued', attempt_count = 0, error = NULL,
+                        requested_by = COALESCE(requested_by, %s)
         WHERE episode_id = %s AND status = 'failed'
         """,
-        (episode_id,),
+        (user_id, episode_id),
+    )
+    email = conn.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()
+    log_user_event(
+        conn,
+        user_id=user_id,
+        email=email[0] if email else None,
+        event="index_queued",
+        props={"episode_id": episode_id, "catalog_id": catalog_id, "queued_new": queued},
     )
     return {
         "episode_id": episode_id,

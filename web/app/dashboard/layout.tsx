@@ -36,9 +36,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
           Jobs
         </Link>
         {isAdmin && (
-          <Link className="dash-nav-link" href="/dashboard/settings">
-            Settings
-          </Link>
+          <>
+            <Link className="dash-nav-link" href="/dashboard/users">
+              Users
+            </Link>
+            <Link className="dash-nav-link" href="/dashboard/funnel">
+              Funnel
+            </Link>
+            <Link className="dash-nav-link" href="/dashboard/costs">
+              Costs
+            </Link>
+            <Link className="dash-nav-link" href="/dashboard/settings">
+              Settings
+            </Link>
+          </>
         )}
         <div className="dash-side-foot">
           {session.user?.email}

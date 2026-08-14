@@ -45,6 +45,89 @@ export async function retryJob(jobId: string) {
   revalidatePath("/dashboard/jobs");
 }
 
+export async function retryAllFailed() {
+  await requireAdmin();
+  await sql`
+    UPDATE jobs SET status = 'queued', attempt_count = 0, error = NULL
+    WHERE status = 'failed'
+  `;
+  revalidatePath("/dashboard/jobs");
+}
+
+export async function setUserCredits(userId: string, formData: FormData) {
+  await requireAdmin();
+  const raw = String(formData.get("extra_credits") ?? "").trim();
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 1_000_000) throw new Error("invalid credits");
+  await sql`
+    UPDATE users SET extra_credits = ${Math.floor(n)}, updated_at = now() WHERE id = ${userId}
+  `;
+  revalidatePath(`/dashboard/users/${userId}`);
+  revalidatePath("/dashboard/users");
+}
+
+export async function clearUserByok(userId: string) {
+  await requireAdmin();
+  await sql`
+    UPDATE users SET byok_anthropic_enc = NULL, byok_last4 = NULL, updated_at = now()
+    WHERE id = ${userId}
+  `;
+  revalidatePath(`/dashboard/users/${userId}`);
+}
+
+export async function adminUnsaveCatalog(userId: string, catalogId: string) {
+  await requireAdmin();
+  await sql`
+    DELETE FROM user_catalogs
+    WHERE user_id = ${userId} AND catalog_id = ${catalogId} AND kind = 'saved'
+  `;
+  await sql`
+    INSERT INTO user_events (user_id, event, props)
+    VALUES (
+      ${userId},
+      'catalog_unsaved',
+      ${sql.json({ catalog_id: catalogId, by: "admin" })}
+    )
+  `;
+  revalidatePath(`/dashboard/users/${userId}`);
+}
+
+export async function setCreditRequestStatus(requestId: string, formData: FormData) {
+  await requireAdmin();
+  const status = String(formData.get("status") ?? "");
+  if (!["open", "contacted", "fulfilled", "closed"].includes(status)) {
+    throw new Error("invalid status");
+  }
+  await sql`
+    UPDATE credit_requests SET status = ${status}, updated_at = now()
+    WHERE id = ${requestId}::uuid
+  `;
+  revalidatePath("/dashboard/users");
+  const [row] = await sql`SELECT user_id FROM credit_requests WHERE id = ${requestId}::uuid`;
+  if (row?.user_id) revalidatePath(`/dashboard/users/${row.user_id}`);
+}
+
+export async function fulfillCreditRequest(requestId: string, formData: FormData) {
+  await requireAdmin();
+  const grant = Number(formData.get("grant_credits") ?? 0);
+  const [req] = await sql`
+    SELECT id, user_id, email FROM credit_requests WHERE id = ${requestId}::uuid
+  `;
+  if (!req) throw new Error("request not found");
+  if (req.user_id && Number.isFinite(grant) && grant > 0) {
+    await sql`
+      UPDATE users SET extra_credits = extra_credits + ${Math.floor(grant)}, updated_at = now()
+      WHERE id = ${req.user_id}
+    `;
+  }
+  await sql`
+    UPDATE credit_requests SET status = 'fulfilled', updated_at = now()
+    WHERE id = ${requestId}::uuid
+  `;
+  revalidatePath("/dashboard/users");
+  if (req.user_id) revalidatePath(`/dashboard/users/${req.user_id}`);
+}
+
 export async function queueEpisode(episodeId: string) {
   await requireAdmin();
   const [ep] = await sql`SELECT catalog_id FROM episodes WHERE id = ${episodeId}`;

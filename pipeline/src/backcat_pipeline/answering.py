@@ -133,12 +133,30 @@ def log_question(
     confidence: float,
     ip: str | None = None,
     user_id: str | None = None,
+    debit_mode: str | None = None,
 ) -> int:
-    return conn.execute(
-        "INSERT INTO questions (catalog_id, question, answered, confidence, ip, user_id) "
-        "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
-        (catalog_id, question, answered, confidence, ip, user_id),
+    qid = conn.execute(
+        "INSERT INTO questions (catalog_id, question, answered, confidence, ip, user_id, debit_mode) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+        (catalog_id, question, answered, confidence, ip, user_id, debit_mode),
     ).fetchone()[0]
+    if user_id:
+        from .users import log_user_event
+
+        email_row = conn.execute("SELECT email FROM users WHERE id = %s", (user_id,)).fetchone()
+        log_user_event(
+            conn,
+            user_id=user_id,
+            email=email_row[0] if email_row else None,
+            event="ask",
+            props={
+                "question_id": qid,
+                "catalog_id": catalog_id,
+                "answered": answered,
+                "debit_mode": debit_mode,
+            },
+        )
+    return qid
 
 
 def record_answer(

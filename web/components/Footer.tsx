@@ -4,9 +4,9 @@ const columns = [
   {
     title: "Product",
     links: [
-      { href: "#features", label: "Features" },
-      { href: "#pricing", label: "Pricing" },
       { href: "#how", label: "How it works" },
+      { href: "#pricing", label: "Pricing" },
+      { href: "#early", label: "Early access" },
     ],
   },
   {

@@ -84,6 +84,21 @@ export async function clearByok(): Promise<void> {
   if (!resp.ok) throw new Error(`clear byok ${resp.status}`);
 }
 
+export async function requestCredits(note?: string): Promise<{
+  ok: boolean;
+  message: string;
+  email?: string;
+}> {
+  const resp = await fetch(`${SERVE_URL}/api/me/credit-request`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ note: note || null }),
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data.detail || `credit request ${resp.status}`);
+  return data;
+}
+
 export async function fetchCatalogs(): Promise<CatalogRow[]> {
   const resp = await fetch(`${SERVE_URL}/api/me/catalogs`, { headers: await authHeaders() });
   if (!resp.ok) throw new Error(`catalogs ${resp.status}`);

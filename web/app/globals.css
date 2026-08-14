@@ -481,3 +481,327 @@ a:hover {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* ---------- extension landing ---------- */
+.ext-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+.ext-hero {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 40px;
+  align-items: center;
+  min-height: calc(100vh - 100px);
+  padding-bottom: 48px;
+}
+
+.ext-kicker {
+  color: var(--orange);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+.ext-brand {
+  font-size: clamp(48px, 8vw, 72px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin: 0 0 18px;
+}
+
+.ext-brand span {
+  color: var(--orange);
+}
+
+.ext-headline {
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0 0 12px;
+  max-width: 28ch;
+}
+
+.ext-sub {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 28px;
+  max-width: 36ch;
+}
+
+.ext-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.ext-cta-row .btn-primary {
+  display: inline-flex;
+  padding: 14px 26px;
+  font-size: 14px;
+}
+
+.btn-ghost-landing {
+  display: inline-flex;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.btn-ghost-landing:hover {
+  color: var(--ink);
+  border-color: var(--dim);
+}
+
+.ext-browser {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0e0e14;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  animation: bc-float 8s ease-in-out infinite;
+}
+
+.ext-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #1a1a22;
+  border-bottom: 1px solid var(--line);
+}
+
+.ext-browser-bar i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+
+.ext-url {
+  margin-inline-start: 10px;
+  font-size: 11px;
+  color: var(--dim);
+  flex: 1;
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.ext-browser-body {
+  min-height: 320px;
+}
+
+.ext-browser-body .shot-frame {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.ext-browser-body .shot-wrap {
+  aspect-ratio: 16 / 10;
+  min-height: 320px;
+}
+
+.shot-frame {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.shot-wrap {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(145deg, #1a1a22, #121218);
+}
+
+.shot-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--dim);
+  border: 1px dashed var(--line-2);
+  margin: 16px;
+  border-radius: 10px;
+  text-align: center;
+  padding: 16px;
+}
+
+.shot-fallback strong {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.shot-fallback .dim {
+  font-size: 11px;
+}
+
+.shot-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.shot-img.loaded {
+  opacity: 1;
+}
+
+.shot-frame figcaption {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+.ext-section {
+  padding: 72px 0 24px;
+}
+
+.ext-section-title {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  margin: 0 0 10px;
+}
+
+.ext-section-sub {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 36px;
+  max-width: 42ch;
+}
+
+.ext-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-bottom: 48px;
+}
+
+.ext-step-n {
+  color: var(--orange);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.ext-step h3 {
+  margin: 8px 0 8px;
+  font-size: 18px;
+}
+
+.ext-step p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+.ext-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.ext-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.ext-tier {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  background: var(--card);
+}
+
+.ext-tier.accent {
+  border-color: rgba(255, 138, 61, 0.45);
+}
+
+.ext-tier h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.ext-tier p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.ext-credit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ext-credit-form .btn-primary {
+  border: none;
+  cursor: pointer;
+  padding: 12px 18px;
+  font-size: 13px;
+}
+
+.ok-msg {
+  color: #1f9a80;
+  font-size: 13px;
+  margin: 0;
+}
+
+.ext-faq-item {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.ext-faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.ext-faq-item p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+
+.ext-early-form {
+  max-width: 520px;
+}
+
+@media (max-width: 900px) {
+  .ext-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: 28px;
+    padding-top: 12px;
+  }
+  .ext-steps,
+  .ext-gallery,
+  .ext-tiers {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import AutoRefresh from "@/components/AutoRefresh";
 import { sql } from "@/lib/db";
-import { retryJob } from "../actions";
+import { retryAllFailed, retryJob } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,25 +18,23 @@ function dur(start?: string | Date | null, end?: string | Date | null): string {
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ episode?: string; catalog?: string }>;
+  searchParams: Promise<{ episode?: string; catalog?: string; status?: string }>;
 }) {
-  const { episode: episodeFilter, catalog: catalogFilter } = await searchParams;
+  const { episode: episodeFilter, catalog: catalogFilter, status: statusRaw } =
+    await searchParams;
+  const statusFilter =
+    statusRaw === "failed" ||
+    statusRaw === "running" ||
+    statusRaw === "queued" ||
+    statusRaw === "done"
+      ? statusRaw
+      : statusRaw === "all"
+        ? "all"
+        : "failed"; // default: failed-first view when no status — but show all if no fails?
+
   const session = await auth();
   const isAdmin = session?.roles?.includes("admin");
 
-  const jobs = await sql`
-    SELECT j.id, j.stage, j.status, j.attempt_count, j.error, j.started_at, j.finished_at,
-           j.logs, e.title AS episode, c.name AS catalog
-    FROM jobs j
-    JOIN episodes e ON e.id = j.episode_id
-    JOIN catalogs c ON c.id = j.catalog_id
-    WHERE (${episodeFilter ?? null}::text IS NULL OR j.episode_id = ${episodeFilter ?? null})
-      AND (${catalogFilter ?? null}::text IS NULL OR j.catalog_id = ${catalogFilter ?? null})
-    ORDER BY
-      CASE j.status WHEN 'running' THEN 0 WHEN 'failed' THEN 1 WHEN 'queued' THEN 2 ELSE 3 END,
-      coalesce(j.finished_at, j.started_at) DESC NULLS LAST
-    LIMIT 150
-  `;
   const [counts] = await sql`
     SELECT count(*) FILTER (WHERE status = 'queued')::int AS queued,
            count(*) FILTER (WHERE status = 'running')::int AS running,
@@ -43,10 +42,51 @@ export default async function JobsPage({
            count(*) FILTER (WHERE status = 'done')::int AS done
     FROM jobs
   `;
+
+  // Default to failed when there are failures; otherwise all.
+  const effectiveStatus =
+    statusRaw == null ? (counts.failed > 0 ? "failed" : "all") : statusFilter;
+
+  const jobs =
+    effectiveStatus === "all"
+      ? await sql`
+          SELECT j.id, j.stage, j.status, j.attempt_count, j.error, j.started_at, j.finished_at,
+                 j.logs, j.catalog_id, j.episode_id, e.title AS episode, c.name AS catalog
+          FROM jobs j
+          JOIN episodes e ON e.id = j.episode_id
+          JOIN catalogs c ON c.id = j.catalog_id
+          WHERE (${episodeFilter ?? null}::text IS NULL OR j.episode_id = ${episodeFilter ?? null})
+            AND (${catalogFilter ?? null}::text IS NULL OR j.catalog_id = ${catalogFilter ?? null})
+          ORDER BY
+            CASE j.status WHEN 'running' THEN 0 WHEN 'failed' THEN 1 WHEN 'queued' THEN 2 ELSE 3 END,
+            coalesce(j.finished_at, j.started_at) DESC NULLS LAST
+          LIMIT 150
+        `
+      : await sql`
+          SELECT j.id, j.stage, j.status, j.attempt_count, j.error, j.started_at, j.finished_at,
+                 j.logs, j.catalog_id, j.episode_id, e.title AS episode, c.name AS catalog
+          FROM jobs j
+          JOIN episodes e ON e.id = j.episode_id
+          JOIN catalogs c ON c.id = j.catalog_id
+          WHERE j.status = ${effectiveStatus}
+            AND (${episodeFilter ?? null}::text IS NULL OR j.episode_id = ${episodeFilter ?? null})
+            AND (${catalogFilter ?? null}::text IS NULL OR j.catalog_id = ${catalogFilter ?? null})
+          ORDER BY coalesce(j.finished_at, j.started_at) DESC NULLS LAST
+          LIMIT 150
+        `;
+
   const [hb] = await sql`SELECT value, updated_at FROM app_config WHERE key = 'worker.last_seen'`;
   const hbAge = hb ? (Date.now() - new Date(hb.updated_at).getTime()) / 1000 : null;
   const workerAlive = hbAge !== null && hbAge < 30;
-  const active = counts.queued > 0 || counts.running > 0;
+  const active = counts.queued > 0 || counts.running > 0 || counts.failed > 0;
+
+  const qs = (status: string) => {
+    const p = new URLSearchParams();
+    p.set("status", status);
+    if (episodeFilter) p.set("episode", episodeFilter);
+    if (catalogFilter) p.set("catalog", catalogFilter);
+    return `/dashboard/jobs?${p}`;
+  };
 
   return (
     <>
@@ -88,6 +128,25 @@ export default async function JobsPage({
         </div>
       </div>
 
+      <div className="filter-pills" style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {(["failed", "running", "queued", "done", "all"] as const).map((st) => (
+          <Link
+            key={st}
+            href={qs(st)}
+            className={`pill ${effectiveStatus === st ? "active" : ""}`}
+          >
+            {st}
+          </Link>
+        ))}
+        {isAdmin && counts.failed > 0 && (
+          <form action={retryAllFailed} style={{ marginInlineStart: "auto" }}>
+            <button className="btn" type="submit">
+              Retry all failed ({counts.failed})
+            </button>
+          </form>
+        )}
+      </div>
+
       <table className="dash-table">
         <thead>
           <tr>
@@ -103,10 +162,10 @@ export default async function JobsPage({
             <tr key={j.id}>
               <td style={{ maxWidth: 340 }}>
                 <div dir="auto" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {j.episode}
+                  <Link href={`/dashboard/episodes/${j.episode_id}`}>{j.episode}</Link>
                 </div>
                 <div className="mono" style={{ fontSize: 11, color: "var(--dim)" }}>
-                  {j.catalog}
+                  <Link href={`/dashboard/catalogs/${j.catalog_id}`}>{j.catalog}</Link>
                 </div>
               </td>
               <td className="mono">{j.stage}</td>
@@ -116,7 +175,7 @@ export default async function JobsPage({
                   {j.attempt_count > 1 ? ` (${j.attempt_count})` : ""}
                 </span>
                 {j.error && (
-                  <details style={{ marginTop: 4, maxWidth: 380 }}>
+                  <details open={j.status === "failed"} style={{ marginTop: 4, maxWidth: 420 }}>
                     <summary className="mono" style={{ fontSize: 11, color: "#e24b4a", cursor: "pointer" }}>
                       error
                     </summary>
@@ -159,7 +218,7 @@ export default async function JobsPage({
           {jobs.length === 0 && (
             <tr>
               <td colSpan={5} className="dash-sub">
-                No jobs yet.
+                No jobs in this filter.
               </td>
             </tr>
           )}
