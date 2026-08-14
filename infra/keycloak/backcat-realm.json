@@ -23,11 +23,11 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": [
         "http://localhost:3000/*",
-        "http://18.234.237.188:3000/*"
+        "http://34.228.185.108:3000/*"
       ],
       "webOrigins": [
         "http://localhost:3000",
-        "http://18.234.237.188:3000"
+        "http://34.228.185.108:3000"
       ]
     },
     {

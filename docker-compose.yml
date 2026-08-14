@@ -50,7 +50,7 @@ services:
       # otherwise the `iss` claim tracks whichever hostname the authorization
       # request used, and mismatches whatever the token-exchange side expects.
       # See auth.ts for how the web container still reaches this internally.
-      KC_HOSTNAME: http://18.234.237.188:8080
+      KC_HOSTNAME: http://34.228.185.108:8080
     ports:
       - "8080:8080"
     volumes:
@@ -78,9 +78,9 @@ services:
     environment:
       DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
       NEO4J_URI: bolt://neo4j:7687
-      CORS_ORIGIN: http://18.234.237.188:3000
+      CORS_ORIGIN: http://34.228.185.108:3000
       INTERNAL_TOKEN: dev-internal-token
-      KEYCLOAK_ISSUER: http://18.234.237.188:8080/realms/backcat
+      KEYCLOAK_ISSUER: http://34.228.185.108:8080/realms/backcat
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/backcat/protocol/openid-connect/certs
       BYOK_SECRET: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
     ports:
@@ -128,7 +128,7 @@ services:
       # Without this, Auth.js infers the app's own URL from the request in a
       # way that resolved to the container's Docker hostname instead of
       # localhost — breaking the OAuth redirect_uri Keycloak checks against.
-      AUTH_URL: http://18.234.237.188:3000
+      AUTH_URL: http://34.228.185.108:3000
       # Keycloak's issuer identity (KC_HOSTNAME, see above) — every URL in
       # this container (discovery, authorization, token, jwks) is built from
       # this string, so it must be the browser-facing one for the `iss`
@@ -136,7 +136,7 @@ services:
       # customFetch to actually route those requests to the internal
       # service DNS name instead of localhost, which doesn't resolve inside
       # this container.
-      AUTH_KEYCLOAK_ISSUER: http://18.234.237.188:8080/realms/backcat
+      AUTH_KEYCLOAK_ISSUER: http://34.228.185.108:8080/realms/backcat
       AUTH_KEYCLOAK_INTERNAL_HOST: keycloak:8080
       SERVE_INTERNAL_URL: http://serve:8000
       INTERNAL_TOKEN: dev-internal-token
