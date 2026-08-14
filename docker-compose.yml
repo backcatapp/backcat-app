@@ -31,10 +31,12 @@ services:
     volumes:
       - neo4jdata:/data
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      # HTTP can answer before Bolt accepts connections — worker uses bolt://.
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p backcatdev 'RETURN 1' || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 20
+      start_period: 40s
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.4
@@ -100,7 +102,7 @@ services:
     # tracks applied files; MERGE-based constraints are a no-op if present).
     command: >
       sh -c "migrate &&
-      python -c 'from backcat_pipeline.graph import ensure_constraints; ensure_constraints()' &&
+      python -m backcat_pipeline.wait_neo4j &&
       ingest worker --interval 5"
     env_file:
       - pipeline/.env

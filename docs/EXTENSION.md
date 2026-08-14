@@ -21,18 +21,25 @@ pipeline/
 ### Surfaces
 
 - **Side panel** — Channels / Ask / Profile (usage meter, BYOK, buy-more mailto stub).
-- **YouTube content script** — Shadow-DOM chip when `GET /api/videos/{id}` hits;
-  citation seek sets `document.querySelector("video").currentTime`.
+  Channels expands to list episodes (title → YouTube, indexed vs listed-only badge;
+  Ask disabled until indexed).
+- **YouTube content script** — native-style **Ask** pill in the watch-page actions
+  row (Share / Download / Save). Click opens an in-page right panel (Shadow DOM,
+  Eigengrau + Tabby) for streaming cited answers; citations seek the page `<video>`.
+  Listed-but-not-indexed videos get the pill + a manage/side-panel prompt instead
+  of Ask. `GET /api/videos/{id}` (+ optional Bearer for saved/owned).
 - **Web `/c/{id}`** — anonymous share page still works (IP rate limit).
 
 ### Auth & usage
 
 - Keycloak JWT on `Authorization: Bearer` for `/api/me*` and authenticated asks.
+- `GET /api/me/catalogs/{id}/episodes` lists episodes for owned/saved catalogs.
 - Anonymous `/ask` kept for the public fan page.
 - `rate_limit.questions_per_user_per_day` (default 10) → then `users.extra_credits`
   → then encrypted BYOK (`users.byok_anthropic_enc`, Fernet + `BYOK_SECRET`).
-- Adding a channel from the extension lists RSS episodes only — **no Whisper
-  jobs**. Transcription stays admin/dashboard until paid index-hours ship.
+- Adding a channel from the extension lists RSS episodes; **Index** on a video
+  queues Whisper→embed→graph (worker must be running; ~$0.04/audio-hour).
+  Kill-switch still applies.
 
 ### CORS
 
@@ -52,5 +59,10 @@ Keycloak must include client `backcat-ext` and `registrationAllowed: true`
 docker compose up -d --force-recreate keycloak
 ```
 
-Serve needs `KEYCLOAK_ISSUER` (+ `KEYCLOAK_JWKS_URL` in Docker) and migration 007
-(applied by the worker on start via `migrate`).
+Wait ~45s for first boot (Quarkus augmentation). Confirm with:
+`http://localhost:8080/realms/backcat` → should load.
+
+The ext client's Valid Redirect URIs is `*` in local/dev — Keycloak does **not**
+treat `https://*.chromiumapp.org/*` as a hostname wildcard, so the Chrome
+identity redirect (`https://<extension-id>.chromiumapp.org/`) would get
+`invalid_redirect_uri` otherwise. Tighten before any store listing.

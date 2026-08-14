@@ -106,6 +106,21 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 export async function login(): Promise<TokenSet> {
+  // Fail fast with a clear message if Keycloak isn't up (Chrome only says
+  // "Authorization page could not be loaded").
+  try {
+    const probe = await fetch(`${realmBase()}/.well-known/openid-configuration`);
+    if (!probe.ok) throw new Error(`Keycloak realm not ready (${probe.status})`);
+  } catch (e: unknown) {
+    const hint =
+      e instanceof TypeError
+        ? "Is Keycloak running? Try: docker compose up -d keycloak"
+        : e instanceof Error
+          ? e.message
+          : String(e);
+    throw new Error(`Cannot reach Keycloak at ${__KEYCLOAK_URL__}. ${hint}`);
+  }
+
   const redirectUri = chrome.identity.getRedirectURL();
   const verifier = randomString(64);
   const challenge = b64url(await sha256(verifier));
@@ -120,10 +135,18 @@ export async function login(): Promise<TokenSet> {
   authUrl.searchParams.set("code_challenge_method", "S256");
   authUrl.searchParams.set("state", state);
 
-  const redirect = await chrome.identity.launchWebAuthFlow({
-    url: authUrl.toString(),
-    interactive: true,
-  });
+  let redirect: string | undefined;
+  try {
+    redirect = await chrome.identity.launchWebAuthFlow({
+      url: authUrl.toString(),
+      interactive: true,
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `${msg} (redirect ${redirectUri}). Open ${authUrl.origin} in a tab to confirm Keycloak is up.`
+    );
+  }
   if (!redirect) throw new Error("login cancelled");
   const returned = new URL(redirect);
   if (returned.searchParams.get("state") !== state) throw new Error("state mismatch");

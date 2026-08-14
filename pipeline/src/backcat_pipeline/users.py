@@ -206,3 +206,91 @@ def list_catalogs(conn, user_id: str) -> list[dict]:
         }
         for r in rows
     ]
+
+
+def user_has_catalog(conn, user_id: str, catalog_id: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM user_catalogs WHERE user_id = %s AND catalog_id = %s LIMIT 1",
+        (user_id, catalog_id),
+    ).fetchone()
+    return row is not None
+
+
+def list_catalog_episodes(conn, user_id: str, catalog_id: str) -> list[dict] | None:
+    """Episodes for a catalog the user owns/saved. None if no access."""
+    if not user_has_catalog(conn, user_id, catalog_id):
+        return None
+    rows = conn.execute(
+        """
+        SELECT e.id, e.title, e.source_url, e.published_at, e.guid,
+               EXISTS (
+                   SELECT 1 FROM chunks ch WHERE ch.episode_id = e.id
+               ) AS indexed,
+               EXISTS (
+                   SELECT 1 FROM jobs j
+                   WHERE j.episode_id = e.id AND j.status IN ('queued', 'running')
+               ) AS indexing
+        FROM episodes e
+        WHERE e.catalog_id = %s
+        ORDER BY e.published_at DESC NULLS LAST, e.title
+        """,
+        (catalog_id,),
+    ).fetchall()
+    return [
+        {
+            "id": r[0],
+            "title": r[1],
+            "source_url": r[2],
+            "published_at": r[3].isoformat() if r[3] else None,
+            "youtube_id": r[4],
+            "indexed": bool(r[5]),
+            "indexing": bool(r[6]),
+        }
+        for r in rows
+    ]
+
+
+STAGES = ("download", "transcribe", "chunk", "embed", "graph")
+
+
+def queue_episode_index(conn, user_id: str, episode_id: str) -> dict:
+    """Queue full pipeline for an episode the user owns/saved. Idempotent."""
+    from .ids import det_id
+
+    row = conn.execute(
+        "SELECT e.catalog_id, e.title FROM episodes e WHERE e.id = %s",
+        (episode_id,),
+    ).fetchone()
+    if row is None:
+        raise LookupError("episode not found")
+    catalog_id, title = row
+    if not user_has_catalog(conn, user_id, catalog_id):
+        raise PermissionError("catalog not linked to user")
+
+    queued = 0
+    for stage in STAGES:
+        cur = conn.execute(
+            """
+            INSERT INTO jobs (id, catalog_id, episode_id, stage)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (episode_id, stage) DO NOTHING
+            """,
+            (det_id(episode_id, stage), catalog_id, episode_id, stage),
+        )
+        queued += cur.rowcount or 0
+    # If jobs already existed as failed/done, re-queue missing stages only via
+    # ON CONFLICT DO NOTHING — for re-index of failed, bump failed→queued:
+    conn.execute(
+        """
+        UPDATE jobs SET status = 'queued', attempt_count = 0, error = NULL
+        WHERE episode_id = %s AND status = 'failed'
+        """,
+        (episode_id,),
+    )
+    return {
+        "episode_id": episode_id,
+        "catalog_id": catalog_id,
+        "title": title,
+        "queued_new": queued,
+        "status": "indexing",
+    }

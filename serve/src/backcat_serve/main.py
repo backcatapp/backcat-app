@@ -29,8 +29,10 @@ from backcat_pipeline.users import (
     clear_byok,
     debit_ask,
     link_catalog,
+    list_catalog_episodes,
     list_catalogs,
     profile,
+    queue_episode_index,
     set_byok,
     set_display_name,
     unlink_saved,
@@ -131,6 +133,35 @@ def my_catalogs(request: Request):
         return {"catalogs": list_catalogs(conn, user.id)}
 
 
+@app.get("/api/me/catalogs/{catalog_id}/episodes")
+def my_catalog_episodes(catalog_id: str, request: Request):
+    """List episodes for a catalog the user owns or saved."""
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        conn.commit()
+        episodes = list_catalog_episodes(conn, user.id, catalog_id)
+    if episodes is None:
+        raise HTTPException(status_code=404, detail="catalog not found or not linked")
+    return {"catalog_id": catalog_id, "episodes": episodes}
+
+
+@app.post("/api/me/episodes/{episode_id}/index")
+def index_my_episode(episode_id: str, request: Request):
+    """Queue download→graph for an episode the user owns/saved (Whisper spends $)."""
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        try:
+            result = queue_episode_index(conn, user.id, episode_id)
+        except LookupError:
+            raise HTTPException(status_code=404, detail="episode not found") from None
+        except PermissionError:
+            raise HTTPException(status_code=403, detail="save this channel first") from None
+        conn.commit()
+    return result
+
+
 @app.post("/api/me/catalogs")
 def add_my_catalog(body: ChannelBody, request: Request):
     """Add a YouTube channel (RSS list only — no Whisper jobs) and mark owned+saved."""
@@ -173,14 +204,26 @@ def unsave_catalog(catalog_id: str, request: Request):
 
 
 @app.get("/api/videos/{youtube_id}")
-def video_lookup(youtube_id: str):
-    """Map a YouTube video id → catalog/episode if indexed (extension watch panel)."""
+def video_lookup(youtube_id: str, request: Request):
+    """Map a YouTube video id → catalog/episode if listed in any catalog.
+
+    Always returns indexed status (has chunks). With Bearer, also returns
+    saved/owned relative to the signed-in user.
+    """
     if not youtube_id or len(youtube_id) > 32:
         raise HTTPException(status_code=422, detail="bad video id")
+    auth = optional_user(request)
     with connect() as conn:
         row = conn.execute(
             """
-            SELECT e.id, e.catalog_id, c.name, e.title
+            SELECT e.id, e.catalog_id, c.name, e.title,
+                   EXISTS (
+                       SELECT 1 FROM chunks ch WHERE ch.episode_id = e.id
+                   ) AS indexed,
+                   EXISTS (
+                       SELECT 1 FROM jobs j
+                       WHERE j.episode_id = e.id AND j.status IN ('queued', 'running')
+                   ) AS indexing
             FROM episodes e
             JOIN catalogs c ON c.id = e.catalog_id
             WHERE e.source_url LIKE %s OR e.guid = %s OR e.audio_url = %s
@@ -188,34 +231,53 @@ def video_lookup(youtube_id: str):
             """,
             (f"%{youtube_id}%", youtube_id, f"youtube:{youtube_id}"),
         ).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail="video not in any catalog")
-    return {
-        "episode_id": row[0],
-        "catalog_id": row[1],
-        "catalog_name": row[2],
-        "episode_title": row[3],
-    }
+        if row is None:
+            raise HTTPException(status_code=404, detail="video not in any catalog")
+        out = {
+            "episode_id": row[0],
+            "catalog_id": row[1],
+            "catalog_name": row[2],
+            "episode_title": row[3],
+            "indexed": bool(row[4]),
+            "indexing": bool(row[5]),
+        }
+        if auth is not None:
+            _ensure_user_row(conn, auth)
+            kinds = conn.execute(
+                "SELECT kind FROM user_catalogs WHERE user_id = %s AND catalog_id = %s",
+                (auth.id, row[1]),
+            ).fetchall()
+            kind_set = {k[0] for k in kinds}
+            out["saved"] = "saved" in kind_set
+            out["owned"] = "owned" in kind_set
+            out["linked"] = bool(kind_set)
+            conn.commit()
+    return out
 
 
 @app.get("/api/catalogs/{catalog_id}/graph")
-def catalog_graph_endpoint(catalog_id: str, limit: int = 120):
-    """Concept graph for visualization: entities + co-occurrence links."""
+def catalog_graph_endpoint(catalog_id: str, limit: int = 120, episode_id: str | None = None):
+    """Concept graph for visualization: entities + co-occurrence links.
+
+    Pass episode_id to scope to one video (YouTube watch panel / Graph tab).
+    """
     from backcat_pipeline.graph import catalog_graph
 
     try:
-        return catalog_graph(catalog_id, limit=min(limit, 300))
+        return catalog_graph(
+            catalog_id, limit=min(limit, 300), episode_id=episode_id or None
+        )
     except Exception:
         raise HTTPException(status_code=503, detail="graph unavailable")
 
 
 @app.get("/api/concepts/chunks")
-def concept_chunks_endpoint(uid: str):
+def concept_chunks_endpoint(uid: str, episode_id: str | None = None):
     """Moments (chunks) related to a selected graph node, with text + player URLs."""
     from backcat_pipeline.graph import concept_chunks
 
     try:
-        rows = concept_chunks(uid)
+        rows = concept_chunks(uid, episode_id=episode_id or None)
     except Exception:
         raise HTTPException(status_code=503, detail="graph unavailable")
     if not rows:

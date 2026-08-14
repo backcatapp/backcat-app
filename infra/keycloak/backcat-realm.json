@@ -8,15 +8,7 @@
     "realm": [
       { "name": "admin", "description": "Full config authority in the panel" },
       { "name": "creator", "description": "Catalog owner (dashboard, v1.0)" },
-      { "name": "fan", "description": "Fan-side account (extension + public surfaces)" },
-      {
-        "name": "default-roles-backcat",
-        "description": "${role_default-roles}",
-        "composite": true,
-        "composites": {
-          "realm": ["fan", "offline_access", "uma_authorization"]
-        }
-      }
+      { "name": "fan", "description": "Fan-side account (extension + public surfaces)" }
     ]
   },
   "clients": [
@@ -44,8 +36,7 @@
         "pkce.code.challenge.method": "S256"
       },
       "redirectUris": [
-        "https://*.chromiumapp.org/*",
-        "http://127.0.0.1/*"
+        "*"
       ],
       "webOrigins": ["+"]
     }
