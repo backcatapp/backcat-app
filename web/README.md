@@ -2,28 +2,22 @@
 
 Landing (Chrome extension product page) + admin dashboard.
 
-## Env
+## Env: development vs production
 
-```env
-DATABASE_URL=postgresql://backcat:backcat@localhost:5432/backcat
-AUTH_SECRET=…
-AUTH_KEYCLOAK_ID=backcat-web
-AUTH_KEYCLOAK_SECRET=…
-AUTH_KEYCLOAK_ISSUER=http://localhost:8080/realms/backcat
-SERVE_INTERNAL_URL=http://localhost:8000
-INTERNAL_TOKEN=dev-internal-token
-NEXT_PUBLIC_CHROME_STORE_URL=https://chromewebstore.google.com/detail/…
+Compose browser URLs come from the **repo-root** `.env` (`PUBLIC_WEB`, `PUBLIC_KEYCLOAK`).
+
+| Machine | Root | Web |
+|---------|------|-----|
+| Laptop (dev) | No `.env`, or `cp .env.development.example .env` | `cp web/.env.development.example web/.env.local` |
+| EC2 (prod) | `cp .env.production.example .env` | `cp web/.env.production.example web/.env.local` |
+
+If local auth points at an AWS IP, delete a leftover production `.env`:
+
+```bash
+rm .env
+docker compose up -d --force-recreate keycloak serve web
 ```
 
-Waitlist and credit requests write to **local Postgres** (`waitlist`, `credit_requests`) — same DB as the pipeline. No Supabase.
+Waitlist and credit requests use product Postgres. Admin: `/dashboard/users`, `/funnel`, `/costs`, `/jobs`.
 
-## Admin (Keycloak `admin` role)
-
-- `/dashboard/users` — users + waitlist-only emails; credit requests
-- `/dashboard/funnel` — waitlist → signup → save → index → ask
-- `/dashboard/costs` — spend charts from `cost_events`
-- `/dashboard/jobs` — failed-first filter + retry / retry-all
-
-## Landing screenshots
-
-Place PNGs in `public/landing/` — see that folder’s README.
+Screenshots: `public/landing/`.
