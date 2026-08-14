@@ -63,13 +63,17 @@ def retrieve(conn, *, catalog_id: str, query: str, k: int = 6) -> tuple[list[Hit
     return fused, confidence, True
 
 
-def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):
+def stream_answer(
+    conn, *, catalog_id: str, query: str, hits: list[Hit], api_key: str | None = None
+):
     """Yields answer text chunks; StopIteration value is the API usage object.
 
-    Caller renders [n] citations from `hits` and commits the connection
-    (the cost event is written before this generator finishes).
+    When `api_key` is set (BYOK), the call is billed to the user — skip the
+    Backcat spend guard and log cost_usd=0 under service=anthropic_byok.
     """
-    if not settings.anthropic_api_key:
+    byok = bool(api_key)
+    key = api_key or settings.anthropic_api_key
+    if not key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set — add it to pipeline/.env")
 
     model = str(get_config(conn, "model.answering"))
@@ -77,12 +81,13 @@ def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):
     rate_out = float(get_config(conn, "answering_usd_per_mtok_out"))
 
     context = build_context(hits)
-    est_cost = ((len(SYSTEM) + len(context) + len(query)) / 4 / 1_000_000) * rate_in + (
-        MAX_ANSWER_TOKENS / 1_000_000
-    ) * rate_out
-    ensure_spend_allowed(conn, est_cost)
+    if not byok:
+        est_cost = ((len(SYSTEM) + len(context) + len(query)) / 4 / 1_000_000) * rate_in + (
+            MAX_ANSWER_TOKENS / 1_000_000
+        ) * rate_out
+        ensure_spend_allowed(conn, est_cost)
 
-    client = anthropic_sdk.Anthropic(api_key=settings.anthropic_api_key)
+    client = anthropic_sdk.Anthropic(api_key=key)
     with client.messages.stream(
         model=model,
         max_tokens=MAX_ANSWER_TOKENS,
@@ -99,15 +104,20 @@ def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):
         final = stream.get_final_message()
 
     usage = final.usage
-    # Cache-aware billing: reads ~0.1x, writes ~1.25x, the rest at full rate.
-    cost = (
-        usage.input_tokens * rate_in
-        + (usage.cache_read_input_tokens or 0) * rate_in * 0.1
-        + (usage.cache_creation_input_tokens or 0) * rate_in * 1.25
-        + usage.output_tokens * rate_out
-    ) / 1_000_000
+    if byok:
+        cost = 0.0
+        service = "anthropic_byok"
+    else:
+        # Cache-aware billing: reads ~0.1x, writes ~1.25x, the rest at full rate.
+        cost = (
+            usage.input_tokens * rate_in
+            + (usage.cache_read_input_tokens or 0) * rate_in * 0.1
+            + (usage.cache_creation_input_tokens or 0) * rate_in * 1.25
+            + usage.output_tokens * rate_out
+        ) / 1_000_000
+        service = "anthropic_answer"
     log_cost(
-        conn, catalog_id=catalog_id, episode_id=None, service="anthropic_answer",
+        conn, catalog_id=catalog_id, episode_id=None, service=service,
         model=model, units=usage.input_tokens + usage.output_tokens, unit_kind="tokens",
         cost_usd=cost,
     )
@@ -115,12 +125,19 @@ def stream_answer(conn, *, catalog_id: str, query: str, hits: list[Hit]):
 
 
 def log_question(
-    conn, *, catalog_id: str, question: str, answered: bool, confidence: float, ip: str | None = None
+    conn,
+    *,
+    catalog_id: str,
+    question: str,
+    answered: bool,
+    confidence: float,
+    ip: str | None = None,
+    user_id: str | None = None,
 ) -> int:
     return conn.execute(
-        "INSERT INTO questions (catalog_id, question, answered, confidence, ip) "
-        "VALUES (%s, %s, %s, %s, %s) RETURNING id",
-        (catalog_id, question, answered, confidence, ip),
+        "INSERT INTO questions (catalog_id, question, answered, confidence, ip, user_id) "
+        "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+        (catalog_id, question, answered, confidence, ip, user_id),
     ).fetchone()[0]
 
 

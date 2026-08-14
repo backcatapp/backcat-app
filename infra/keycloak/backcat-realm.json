@@ -1,14 +1,22 @@
 {
   "realm": "backcat",
   "enabled": true,
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "loginTheme": "keycloak",
   "sslRequired": "none",
   "roles": {
     "realm": [
       { "name": "admin", "description": "Full config authority in the panel" },
       { "name": "creator", "description": "Catalog owner (dashboard, v1.0)" },
-      { "name": "fan", "description": "Fan-side account (later)" }
+      { "name": "fan", "description": "Fan-side account (extension + public surfaces)" },
+      {
+        "name": "default-roles-backcat",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "composites": {
+          "realm": ["fan", "offline_access", "uma_authorization"]
+        }
+      }
     ]
   },
   "clients": [
@@ -23,6 +31,23 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:3000/*"],
       "webOrigins": ["http://localhost:3000"]
+    },
+    {
+      "clientId": "backcat-ext",
+      "name": "Backcat Chrome Extension",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "https://*.chromiumapp.org/*",
+        "http://127.0.0.1/*"
+      ],
+      "webOrigins": ["+"]
     }
   ],
   "users": [
@@ -34,7 +59,7 @@
       "firstName": "Backcat",
       "lastName": "Admin",
       "credentials": [{ "type": "password", "value": "backcatdev", "temporary": false }],
-      "realmRoles": ["admin"]
+      "realmRoles": ["admin", "fan"]
     }
   ]
 }

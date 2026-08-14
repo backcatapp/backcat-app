@@ -4,6 +4,7 @@ One line per decision, newest on top. If you find yourself re-debating something
 
 | Date | Decision | Why |
 |---|---|---|
+| ~Day 11 | **Chrome extension is the fan/creator product surface** (side panel: channels, ask, profile). Web stays landing + admin dashboard. Serve validates Keycloak JWTs (JWKS); usage = daily free asks → `extra_credits` → BYOK Anthropic (Fernet). Channel-add from extension lists RSS only — Whisper stays admin-gated | Meets fans on YouTube; identity/usage pulled forward from v1.0 without opening a spend hole on every signup; Paddle checkout plugs into `extra_credits` next |
 | ~Day 10 | Docker Desktop's data was wiped (disk-space cleanup between sessions); infra recreated clean, no re-ingestion done — user's call | Local Docker volumes aren't a backup; re-ingestion is cheap |
 | ~Day 10 | **Containerized web, serve, worker** — `docker compose up -d` is the whole stack now. Built images, not hot-reload — use `npm run dev`/bare `uvicorn` for fast iteration on one service | Full stack running without juggling terminals |
 | ~Day 10 | Keycloak+Docker OIDC fix: pin `KC_HOSTNAME` to the browser-facing URL (so the `iss` claim is consistent everywhere) + Auth.js `customFetch` silently redirects the web container's outbound requests to the internal service DNS name | Two-issuer approaches don't work — discovery and `iss` must be the same string end-to-end |

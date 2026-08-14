@@ -1,15 +1,15 @@
 """Backcat query API.
 
 SSE streamed directly to the browser (day-3 decision: no Next.js proxy hop).
-Guardrails live here beside the retrieval stack: per-IP rate limit (Postgres),
-kill-switch + daily spend cap (app_config), every question logged.
+Guardrails: per-IP rate limit (anonymous), per-user daily quota + credits + BYOK
+(authenticated extension), kill-switch + daily spend cap (app_config).
 
 SSE protocol on POST /api/catalogs/{id}/ask:
   event: sources  data: [{"i", "episode", "start_s", "end_s"}]
   event: delta    data: {"text": "..."}
   event: done     data: {"answered": true}
   event: absence  data: {"message": "..."}
-  event: error    data: {"message": "...", "code": 429|503|500}
+  event: error    data: {"message": "...", "code": 402|429|503|500}
 """
 
 import json
@@ -24,14 +24,30 @@ from backcat_pipeline.answering import log_question, record_answer, retrieve, st
 from backcat_pipeline.config import get_config
 from backcat_pipeline.costs import SpendBlocked
 from backcat_pipeline.db import connect
+from backcat_pipeline.users import (
+    QuotaExceeded,
+    clear_byok,
+    debit_ask,
+    link_catalog,
+    list_catalogs,
+    profile,
+    set_byok,
+    set_display_name,
+    unlink_saved,
+    upsert_user,
+)
+
+from .auth import AuthUser, optional_user, require_user
 
 app = FastAPI(title="backcat-serve")
 
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGIN", "http://localhost:3000").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in os.environ.get("CORS_ORIGIN", "http://localhost:3000").split(",")],
-    allow_methods=["POST", "GET"],
-    allow_headers=["content-type"],
+    allow_origins=_cors_origins,
+    allow_origin_regex=r"chrome-extension://.*",
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["content-type", "authorization"],
 )
 
 
@@ -39,13 +55,147 @@ class AskBody(BaseModel):
     question: str = Field(min_length=3, max_length=1000)
 
 
+class ProfileBody(BaseModel):
+    display_name: str = Field(min_length=1, max_length=120)
+
+
+class ByokBody(BaseModel):
+    api_key: str = Field(min_length=20, max_length=200)
+
+
+class ChannelBody(BaseModel):
+    url: str = Field(min_length=2, max_length=300)
+
+
 def _sse(event: str, data) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def _ensure_user_row(conn, user: AuthUser) -> None:
+    upsert_user(conn, user_id=user.id, email=user.email or user.id, display_name=user.display_name)
 
 
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
+
+
+@app.get("/api/me")
+def me(request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        conn.commit()
+        return profile(conn, user.id)
+
+
+@app.put("/api/me")
+def update_me(body: ProfileBody, request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        set_display_name(conn, user.id, body.display_name)
+        conn.commit()
+        return profile(conn, user.id)
+
+
+@app.put("/api/me/byok")
+def put_byok(body: ByokBody, request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        try:
+            last4 = set_byok(conn, user.id, body.api_key)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        conn.commit()
+        return {"byok_configured": True, "byok_last4": last4}
+
+
+@app.delete("/api/me/byok")
+def delete_byok(request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        clear_byok(conn, user.id)
+        conn.commit()
+    return {"byok_configured": False}
+
+
+@app.get("/api/me/catalogs")
+def my_catalogs(request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        conn.commit()
+        return {"catalogs": list_catalogs(conn, user.id)}
+
+
+@app.post("/api/me/catalogs")
+def add_my_catalog(body: ChannelBody, request: Request):
+    """Add a YouTube channel (RSS list only — no Whisper jobs) and mark owned+saved."""
+    user = require_user(request)
+    from backcat_pipeline.youtube import add_channel
+
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        try:
+            catalog_id, name, n = add_channel(conn, body.url)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        link_catalog(conn, user.id, catalog_id, "owned")
+        link_catalog(conn, user.id, catalog_id, "saved")
+        conn.commit()
+        return {"catalog_id": catalog_id, "name": name, "episodes": n, "indexed": False}
+
+
+@app.post("/api/me/catalogs/{catalog_id}/save")
+def save_catalog(catalog_id: str, request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        row = conn.execute("SELECT id FROM catalogs WHERE id = %s", (catalog_id,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="catalog not found")
+        link_catalog(conn, user.id, catalog_id, "saved")
+        conn.commit()
+    return {"saved": True, "catalog_id": catalog_id}
+
+
+@app.delete("/api/me/catalogs/{catalog_id}/save")
+def unsave_catalog(catalog_id: str, request: Request):
+    user = require_user(request)
+    with connect() as conn:
+        _ensure_user_row(conn, user)
+        unlink_saved(conn, user.id, catalog_id)
+        conn.commit()
+    return {"saved": False, "catalog_id": catalog_id}
+
+
+@app.get("/api/videos/{youtube_id}")
+def video_lookup(youtube_id: str):
+    """Map a YouTube video id → catalog/episode if indexed (extension watch panel)."""
+    if not youtube_id or len(youtube_id) > 32:
+        raise HTTPException(status_code=422, detail="bad video id")
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT e.id, e.catalog_id, c.name, e.title
+            FROM episodes e
+            JOIN catalogs c ON c.id = e.catalog_id
+            WHERE e.source_url LIKE %s OR e.guid = %s OR e.audio_url = %s
+            LIMIT 1
+            """,
+            (f"%{youtube_id}%", youtube_id, f"youtube:{youtube_id}"),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="video not in any catalog")
+    return {
+        "episode_id": row[0],
+        "catalog_id": row[1],
+        "catalog_name": row[2],
+        "episode_title": row[3],
+    }
 
 
 @app.get("/api/catalogs/{catalog_id}/graph")
@@ -108,10 +258,6 @@ def episode_topics_endpoint(episode_id: str):
 INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "dev-internal-token")
 
 
-class ChannelBody(BaseModel):
-    url: str = Field(min_length=2, max_length=300)
-
-
 @app.post("/api/internal/channels")
 def add_channel_endpoint(body: ChannelBody, request: Request):
     if request.headers.get("x-internal-token") != INTERNAL_TOKEN:
@@ -129,6 +275,7 @@ def add_channel_endpoint(body: ChannelBody, request: Request):
 @app.post("/api/catalogs/{catalog_id}/ask")
 def ask(catalog_id: str, body: AskBody, request: Request):
     ip = request.client.host if request.client else None
+    auth = optional_user(request)
 
     def gen():
         with connect() as conn:
@@ -137,15 +284,28 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                 yield _sse("error", {"message": "catalog not found", "code": 404})
                 return
 
-            limit = int(get_config(conn, "rate_limit.questions_per_hour"))
-            recent = conn.execute(
-                "SELECT count(*) FROM questions WHERE ip = %s "
-                "AND created_at > now() - interval '1 hour'",
-                (ip,),
-            ).fetchone()[0]
-            if recent >= limit:
-                yield _sse("error", {"message": "rate limit reached — try again later", "code": 429})
-                return
+            debit = None
+            user_id = None
+            if auth is not None:
+                _ensure_user_row(conn, auth)
+                user_id = auth.id
+                # Pre-check quota (don't burn a credit yet — only when we stream).
+                try:
+                    debit = debit_ask(conn, user_id, commit_credit=False)
+                except QuotaExceeded as exc:
+                    conn.commit()
+                    yield _sse("error", {"message": str(exc), "code": 402})
+                    return
+            else:
+                limit = int(get_config(conn, "rate_limit.questions_per_hour"))
+                recent = conn.execute(
+                    "SELECT count(*) FROM questions WHERE ip = %s "
+                    "AND created_at > now() - interval '1 hour'",
+                    (ip,),
+                ).fetchone()[0]
+                if recent >= limit:
+                    yield _sse("error", {"message": "rate limit reached — try again later", "code": 429})
+                    return
 
             try:
                 hits, confidence, covered = retrieve(
@@ -155,9 +315,13 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                 yield _sse("error", {"message": "temporarily unavailable", "code": 503})
                 return
 
+            # Burn a credit only when we will call the LLM (covered answer).
+            if auth is not None and covered and debit and debit.mode == "credit":
+                debit = debit_ask(conn, user_id, commit_credit=True)
+
             question_id = log_question(
                 conn, catalog_id=catalog_id, question=body.question,
-                answered=covered, confidence=confidence, ip=ip,
+                answered=covered, confidence=confidence, ip=ip, user_id=user_id,
             )
             if not covered:
                 conn.commit()
@@ -183,9 +347,11 @@ def ask(catalog_id: str, body: AskBody, request: Request):
             )
             answer_parts: list[str] = []
             cost = None
+            api_key = debit.api_key if debit else None
             try:
                 answer_gen = stream_answer(
-                    conn, catalog_id=catalog_id, query=body.question, hits=hits
+                    conn, catalog_id=catalog_id, query=body.question, hits=hits,
+                    api_key=api_key,
                 )
                 while True:
                     part = next(answer_gen)
@@ -202,7 +368,7 @@ def ask(catalog_id: str, body: AskBody, request: Request):
                 hits=hits, cost_usd=cost,
             )
             conn.commit()
-            yield _sse("done", {"answered": True})
+            yield _sse("done", {"answered": True, "debit": debit.mode if debit else "anon"})
 
     return StreamingResponse(
         gen(),

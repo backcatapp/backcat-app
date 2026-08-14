@@ -4,11 +4,12 @@ Backcat turns a creator's entire back catalog (podcast/YouTube) into cited answe
 
 ## Monorepo layout
 
-- `web/` — Next.js + TypeScript on Vercel. Landing page + (day 11+) chat UI and concept map explorer.
-- `serve/` — FastAPI query API on Railway. Runs the full query path; streams SSE **direct to the browser** (no Next.js proxy). Rate limiting + daily spend kill-switch live here.
+- `web/` — Next.js + TypeScript on Vercel. Landing page + admin dashboard (jobs, settings, graph). Fan product surface is the Chrome extension (`ext/`).
+- `ext/` — Manifest V3 Chrome extension (side panel + YouTube content script). Sign-in, saved/owned channels, ask, usage wallet (daily free → credits → BYOK).
+- `serve/` — FastAPI query API on Railway. Runs the full query path; streams SSE **direct to the browser** (no Next.js proxy). Rate limiting + daily spend kill-switch + Keycloak JWT auth for the extension live here.
 - `pipeline/` — Python (≥3.10) ingestion: RSS → Whisper (Groq) → time-aligned chunks → embeddings (pgvector) → LLM extraction → Neo4j. Plain CLIs; job state = rows in Postgres (no queue framework).
 - `eval/` — golden-set eval harness (hit@5, MRR, per-category). Open-sourced day 14. **Quality gate: nothing fan-facing ships if the harness regresses.**
-- `docs/` — `ARCHITECTURE.md` (system design — read before touching pipeline/serve) and `DECISIONS.md` (decision log — check before re-debating anything).
+- `docs/` — `ARCHITECTURE.md` (system design — read before touching pipeline/serve), `DECISIONS.md` (decision log — check before re-debating anything), `EXTENSION.md` (Chrome extension product surface).
 
 ## Source of truth
 

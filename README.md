@@ -20,11 +20,12 @@ Full design: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Decisions: [docs/DE
 
 | Dir | What | Stack |
 |---|---|---|
-| `web/` | Landing, chat UI, concept map | Next.js + TypeScript · Vercel |
-| `serve/` | Query API (SSE streaming) | FastAPI · Railway |
+| `web/` | Landing + admin dashboard | Next.js + TypeScript · Vercel |
+| `ext/` | Fan/creator product surface (Chrome MV3 side panel) | Preact · Vite |
+| `serve/` | Query API (SSE streaming) + JWT auth | FastAPI · Railway |
 | `pipeline/` | Ingestion → transcripts → chunks → embeddings → graph | Python · Railway |
 | `eval/` | Golden-set eval harness (open-sourced day 14) | Python |
-| `docs/` | Architecture + decision log | — |
+| `docs/` | Architecture + decision log + extension design | — |
 
 ## Sprint status
 

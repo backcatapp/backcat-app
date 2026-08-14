@@ -1,36 +1,56 @@
-# Chrome Extension — design prep (not scheduled yet)
+# Chrome Extension — product surface
 
-Goal: embed Backcat into the YouTube watch page the way vidIQ does — a panel
-beside/below the player. If the video belongs to an indexed catalog, fans ask
-questions right there, and **citations seek the actual player on the page**
-(no iframe embed needed — better than the web experience).
+The Chrome extension is the fan/creator product surface. Web keeps the
+landing page + admin dashboard. Fans sign in, save/add channels, ask with
+cited answers, and manage a usage wallet (daily free asks → paid credits →
+BYOK Anthropic key).
 
-## Architecture sketch
+## Architecture
 
-- **Manifest V3**, content script on `youtube.com/watch*`.
-- Panel rendered inside **Shadow DOM** (style isolation from YouTube's CSS);
-  brand tokens inlined. No frameworks — vanilla TS or Preact, keep it <50KB.
-- On navigation (YouTube is a SPA — listen to `yt-navigate-finish`), extract
-  the video id, call `GET /api/videos/{youtube_id}` (to build in serve/):
-  returns `{catalog_id, episode_id, catalog_name}` or 404 → panel hidden.
-  Backed by an index on `episodes.source_url` (already stored since 004).
-- Ask flow reuses the **exact SSE protocol** of `/api/catalogs/{id}/ask` —
-  the `lib/ask.ts` client is portable as-is (plain fetch + streams).
-- **Citation click seeks the real player**: `document.querySelector("video")
-  .currentTime = start_s` — the moment plays in the page's own player.
-  This is the killer interaction the web app can only approximate.
-- Auth: none for MVP (same public rate limits as the fan page). Fan accounts
-  (Keycloak `fan` role) would enable history sync later.
-- CORS: allow `chrome-extension://<id>` origin in serve.
+```
+ext/ (MV3 side panel + YouTube content script)
+  │  OIDC PKCE ──► Keycloak (public client backcat-ext)
+  │  Bearer JWT ─► serve/ FastAPI
+serve/
+  │  JWKS validate → users / user_catalogs / questions.user_id
+  │  ask debit: free daily → extra_credits → BYOK → 402
+pipeline/
+  └── migrations/007_users.sql
+```
 
-## Why it matters
+### Surfaces
 
-Distribution: meets fans where they already are; every panel is a Backcat ad
-on the creator's own video. Also a natural creator pitch: "install this and
-watch your own catalog answer."
+- **Side panel** — Channels / Ask / Profile (usage meter, BYOK, buy-more mailto stub).
+- **YouTube content script** — Shadow-DOM chip when `GET /api/videos/{id}` hits;
+  citation seek sets `document.querySelector("video").currentTime`.
+- **Web `/c/{id}`** — anonymous share page still works (IP rate limit).
 
-## Effort estimate
+### Auth & usage
 
-MVP (panel + lookup + ask + seek): ~2–3 days. Store listing + review: +1 week
-lead time. Sensible slot: after day 14 (needs a public serve deployment), as
-a marketing-sprint demo weapon.
+- Keycloak JWT on `Authorization: Bearer` for `/api/me*` and authenticated asks.
+- Anonymous `/ask` kept for the public fan page.
+- `rate_limit.questions_per_user_per_day` (default 10) → then `users.extra_credits`
+  → then encrypted BYOK (`users.byok_anthropic_enc`, Fernet + `BYOK_SECRET`).
+- Adding a channel from the extension lists RSS episodes only — **no Whisper
+  jobs**. Transcription stays admin/dashboard until paid index-hours ship.
+
+### CORS
+
+Serve allows `CORS_ORIGIN` plus `chrome-extension://.*` and the `authorization` header.
+
+## Local load
+
+```bash
+cd ext && npm install && npm run build
+# chrome://extensions → Load unpacked → ext/dist
+```
+
+Keycloak must include client `backcat-ext` and `registrationAllowed: true`
+(see `infra/keycloak/backcat-realm.json`). Recreate Keycloak after realm changes:
+
+```bash
+docker compose up -d --force-recreate keycloak
+```
+
+Serve needs `KEYCLOAK_ISSUER` (+ `KEYCLOAK_JWKS_URL` in Docker) and migration 007
+(applied by the worker on start via `migrate`).

@@ -56,6 +56,8 @@ _DEFAULTS: dict[str, Any] = {
     "extraction_usd_per_mtok_in": 1.0,
     "extraction_usd_per_mtok_out": 5.0,
     "rate_limit.questions_per_hour": 20,
+    # Authenticated extension users: free asks per calendar day before credits/BYOK.
+    "rate_limit.questions_per_user_per_day": 10,
     "max_job_attempts": 3,
 }
 
