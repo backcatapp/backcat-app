@@ -2,6 +2,11 @@
 .env
 .env.*
 !.env.example
+!.env.*.example
+!web/.env.example
+!web/.env.*.example
+!ext/.env.example
+!ext/.env.*.example
 
 # node
 node_modules/
