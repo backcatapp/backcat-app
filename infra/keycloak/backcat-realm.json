@@ -21,8 +21,14 @@
       "secret": "dev-secret-backcat-web",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"]
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://18.234.237.188:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://18.234.237.188:3000"
+      ]
     },
     {
       "clientId": "backcat-ext",
