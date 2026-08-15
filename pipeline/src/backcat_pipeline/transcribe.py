@@ -10,6 +10,8 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
+import time
 from pathlib import Path
 
 from . import joblog
@@ -75,12 +77,26 @@ def _ffmpeg() -> str:
 
 def _segment(path: Path, workdir: Path) -> list[Path]:
     pattern = workdir / "seg_%04d.mp3"
-    subprocess.run(
-        [_ffmpeg(), "-nostdin", "-hide_banner", "-loglevel", "error", "-i", str(path),
-         "-f", "segment", "-segment_time", str(SEGMENT_SECONDS), "-acodec", "libmp3lame",
-         "-b:a", "64k", "-ac", "1", str(pattern)],
-        check=True,
-    )
+    stop = threading.Event()
+    t0 = time.monotonic()
+
+    def _tick() -> None:
+        while not stop.wait(30):
+            n = len(list(workdir.glob("seg_*.mp3")))
+            joblog.log(f"ffmpeg splitting — {n} segments so far ({int(time.monotonic() - t0)}s). Do not restart the worker.")
+
+    ticker = threading.Thread(target=_tick, daemon=True)
+    ticker.start()
+    try:
+        subprocess.run(
+            [_ffmpeg(), "-nostdin", "-hide_banner", "-loglevel", "error", "-i", str(path),
+             "-f", "segment", "-segment_time", str(SEGMENT_SECONDS), "-acodec", "libmp3lame",
+             "-b:a", "64k", "-ac", "1", str(pattern)],
+            check=True,
+        )
+    finally:
+        stop.set()
+        ticker.join(timeout=1)
     return sorted(workdir.glob("seg_*.mp3"))
 
 
@@ -89,15 +105,20 @@ def transcribe_episode(conn, *, catalog_id: str, episode_id: str, path: Path) ->
     model = str(get_config(conn, "model.asr"))
     rate = float(get_config(conn, "asr_usd_per_audio_hour"))
 
+    size_mb = path.stat().st_size / (1024 * 1024)
     if path.stat().st_size <= MAX_UPLOAD_BYTES:
         parts = [path]
         tmpdir = None
     else:
+        joblog.log(
+            f"audio is {size_mb:.0f}MB (over Groq's 25MB cap) — ffmpeg split can take "
+            f"10–30 min at 100% CPU. Dashboard stays on 'transcribe started' until the first segment. Do not restart."
+        )
         tmpdir = tempfile.TemporaryDirectory()
         parts = _segment(path, Path(tmpdir.name))
 
     if len(parts) > 1:
-        joblog.log(f"audio over upload cap — split into {len(parts)} segments")
+        joblog.log(f"split done — {len(parts)} segments, sending to Groq")
     words: list[dict] = []
     texts: list[str] = []
     total_duration = 0.0
@@ -106,6 +127,8 @@ def transcribe_episode(conn, *, catalog_id: str, episode_id: str, path: Path) ->
         for i, part in enumerate(parts, 1):
             # rough pre-check: estimate this part's cost from segment length before paying
             ensure_spend_allowed(conn, (SEGMENT_SECONDS / 3600) * rate)
+            if len(parts) > 1:
+                joblog.log(f"groq {i}/{len(parts)}")
             result = _groq_transcribe(part, model)
             if len(parts) > 1:
                 joblog.log(f"segment {i}/{len(parts)} transcribed")
