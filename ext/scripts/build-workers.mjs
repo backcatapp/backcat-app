@@ -5,15 +5,17 @@
 import * as esbuild from "esbuild";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { publicEnv } from "./public-env.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
+const { serveUrl, keycloakUrl, realm, clientId } = publicEnv();
 
 const define = {
-  __SERVE_URL__: JSON.stringify(process.env.VITE_SERVE_URL || "http://localhost:8000"),
-  __KEYCLOAK_URL__: JSON.stringify(process.env.VITE_KEYCLOAK_URL || "http://localhost:8080"),
-  __KEYCLOAK_REALM__: JSON.stringify(process.env.VITE_KEYCLOAK_REALM || "backcat"),
-  __KEYCLOAK_CLIENT_ID__: JSON.stringify(process.env.VITE_KEYCLOAK_CLIENT_ID || "backcat-ext"),
+  __SERVE_URL__: JSON.stringify(serveUrl),
+  __KEYCLOAK_URL__: JSON.stringify(keycloakUrl),
+  __KEYCLOAK_REALM__: JSON.stringify(realm),
+  __KEYCLOAK_CLIENT_ID__: JSON.stringify(clientId),
 };
 
 await esbuild.build({

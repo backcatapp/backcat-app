@@ -1,10 +1,11 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
 import { resolve } from "path";
 import { readFileSync, writeFileSync } from "fs";
+import { publicEnv } from "./scripts/public-env.mjs";
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
+  const { host, serveUrl, keycloakUrl, realm, clientId } = publicEnv(mode);
   return {
     plugins: [
       preact(),
@@ -22,15 +23,21 @@ export default defineConfig(({ mode }) => {
               run_at: "document_idle",
             },
           ];
+          if (host !== "localhost" && host !== "127.0.0.1") {
+            const extra = [`http://${host}:8000/*`, `http://${host}:8080/*`];
+            const perms = new Set(manifest.host_permissions ?? []);
+            extra.forEach((p) => perms.add(p));
+            manifest.host_permissions = [...perms];
+          }
           writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
         },
       },
     ],
     define: {
-      __SERVE_URL__: JSON.stringify(env.VITE_SERVE_URL || "http://localhost:8000"),
-      __KEYCLOAK_URL__: JSON.stringify(env.VITE_KEYCLOAK_URL || "http://localhost:8080"),
-      __KEYCLOAK_REALM__: JSON.stringify(env.VITE_KEYCLOAK_REALM || "backcat"),
-      __KEYCLOAK_CLIENT_ID__: JSON.stringify(env.VITE_KEYCLOAK_CLIENT_ID || "backcat-ext"),
+      __SERVE_URL__: JSON.stringify(serveUrl),
+      __KEYCLOAK_URL__: JSON.stringify(keycloakUrl),
+      __KEYCLOAK_REALM__: JSON.stringify(realm),
+      __KEYCLOAK_CLIENT_ID__: JSON.stringify(clientId),
     },
     build: {
       outDir: "dist",

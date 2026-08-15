@@ -45,9 +45,9 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: backcatdev
-      # Browser-facing issuer. Defaults = local dev. Production: set PUBLIC_KEYCLOAK
-      # in root `.env` (see .env.production.example).
-      KC_HOSTNAME: ${PUBLIC_KEYCLOAK:-http://localhost:8080}
+      # Browser-facing issuer. One knob: PUBLIC_HOST in root `.env`
+      # (see .env.production.example). Unset = localhost.
+      KC_HOSTNAME: http://${PUBLIC_HOST:-localhost}:8080
     ports:
       - "8080:8080"
     volumes:
@@ -75,9 +75,9 @@ services:
     environment:
       DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
       NEO4J_URI: bolt://neo4j:7687
-      CORS_ORIGIN: ${PUBLIC_WEB:-http://localhost:3000}
+      CORS_ORIGIN: http://${PUBLIC_HOST:-localhost}:3000
       INTERNAL_TOKEN: ${INTERNAL_TOKEN:-dev-internal-token}
-      KEYCLOAK_ISSUER: ${PUBLIC_KEYCLOAK:-http://localhost:8080}/realms/backcat
+      KEYCLOAK_ISSUER: http://${PUBLIC_HOST:-localhost}:8080/realms/backcat
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/backcat/protocol/openid-connect/certs
       BYOK_SECRET: ${BYOK_SECRET:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
     ports:
@@ -117,6 +117,8 @@ services:
   web:
     build:
       context: ./web
+      args:
+        NEXT_PUBLIC_SERVE_URL: http://${PUBLIC_HOST:-localhost}:8000
     container_name: backcat-web
     # Prefer env-specific file; fall back to .env.local for either.
     # Compose v2.24+: required: false. If your compose is older, keep only
@@ -128,11 +130,12 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
-      AUTH_URL: ${PUBLIC_WEB:-http://localhost:3000}
-      AUTH_KEYCLOAK_ISSUER: ${PUBLIC_KEYCLOAK:-http://localhost:8080}/realms/backcat
+      AUTH_URL: http://${PUBLIC_HOST:-localhost}:3000
+      AUTH_KEYCLOAK_ISSUER: http://${PUBLIC_HOST:-localhost}:8080/realms/backcat
       AUTH_KEYCLOAK_INTERNAL_HOST: keycloak:8080
       SERVE_INTERNAL_URL: http://serve:8000
       INTERNAL_TOKEN: ${INTERNAL_TOKEN:-dev-internal-token}
+      NEXT_PUBLIC_SERVE_URL: http://${PUBLIC_HOST:-localhost}:8000
     ports:
       - "3000:3000"
     depends_on:

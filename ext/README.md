@@ -12,7 +12,7 @@ Load unpacked in Chrome: `chrome://extensions` → Developer mode → Load unpac
 
 Sign-in uses Keycloak public client `backcat-ext` (PKCE). Ensure Keycloak is up (`docker compose up -d keycloak`) with the committed realm export (registration enabled).
 
-Env (optional `ext/.env`):
+Env: the build reads `PUBLIC_HOST` from the repo-root `.env` (same file Compose uses). Optional `ext/.env` overrides:
 
 ```
 VITE_SERVE_URL=http://localhost:8000
