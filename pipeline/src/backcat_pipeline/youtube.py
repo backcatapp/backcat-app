@@ -94,14 +94,51 @@ def _yt_dlp() -> str:
     return found
 
 
+_COOKIE_CANDIDATES = ("yt-dlp/cookies.txt", "data/youtube-cookies.txt")
+
+
+def cookie_file() -> Path | None:
+    """Netscape cookie jar for YouTube, if one has been provisioned.
+
+    Datacenter IPs hit YouTube's "confirm you're not a bot" wall; a PO token
+    can't lift an existing block, so an authenticated cookie jar is the only
+    unattended way through. Mounted read-write on purpose: YouTube rotates
+    session cookies and yt-dlp persists them back, which keeps the jar alive
+    far longer than a frozen copy.
+    """
+    explicit = os.environ.get("YT_DLP_COOKIES")
+    paths = [Path(explicit)] if explicit else [Path(c) for c in _COOKIE_CANDIDATES]
+    return next((p for p in paths if p.is_file() and p.stat().st_size > 0), None)
+
+
 def download_youtube(episode_id: str, video_id: str) -> Path:
     dest = audio_path(episode_id)
     if dest.exists() and dest.stat().st_size > 0:
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [_yt_dlp(), "-f", "bestaudio[ext=m4a]/bestaudio", "-o", str(dest), "--no-progress",
-         f"https://www.youtube.com/watch?v={video_id}"],
-        check=True, capture_output=True, text=True,
-    )
+    cmd = [
+        _yt_dlp(),
+        "-f", "bestaudio[ext=m4a]/bestaudio/best",
+        "-o", str(dest),
+        "--no-progress",
+    ]
+    cookies = cookie_file()
+    if cookies:
+        cmd.extend(["--cookies", str(cookies)])
+        # The default client set includes ios, which ignores a cookie jar
+        # entirely — pinning cookie-honouring clients is what makes auth count.
+        client = os.environ.get("YT_DLP_PLAYER_CLIENT", "web,mweb,android")
+        cmd.extend(["--extractor-args", f"youtube:player_client={client}"])
+    proxy = os.environ.get("YT_DLP_PROXY")
+    if proxy:
+        cmd.extend(["--proxy", proxy])
+    cmd.append(f"https://www.youtube.com/watch?v={video_id}")
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or str(exc)).strip()
+        hint = "" if cookies else " (no cookie jar — see infra/yt-dlp/README.md)"
+        raise RuntimeError(f"yt-dlp failed ({exc.returncode}){hint}: {detail[-1500:]}") from exc
+    if not dest.exists() or dest.stat().st_size == 0:
+        raise RuntimeError("yt-dlp exited 0 but wrote no audio")
     return dest

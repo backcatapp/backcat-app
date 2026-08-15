@@ -106,8 +106,14 @@ services:
     environment:
       DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
       NEO4J_URI: bolt://neo4j:7687
+      # Optional escalation if the cookie jar alone can't clear YouTube's
+      # datacenter-IP wall (e.g. http://user:pass@residential-proxy:port).
+      YT_DLP_PROXY: ${YT_DLP_PROXY:-}
     volumes:
       - pipelinedata:/app/pipeline/data
+      # Cookie jar lives on the host so refreshing it is one scp, no rebuild.
+      # Read-write: yt-dlp persists YouTube's rotated session cookies back.
+      - ./infra/yt-dlp:/app/pipeline/yt-dlp
     depends_on:
       postgres:
         condition: service_healthy

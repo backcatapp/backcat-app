@@ -23,6 +23,11 @@ venv/
 dist/
 *.egg-info/
 
+# cookie jars / session exports (never commit)
+infra/yt-dlp/*.txt
+cookies.txt
+*-cookies.txt
+
 # data / artifacts
 *.mp3
 *.m4a
