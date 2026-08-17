@@ -129,6 +129,38 @@ services:
       neo4j:
         condition: service_healthy
 
+  # One-off eval harness (day 10). `profiles: ["eval"]` keeps it out of
+  # `docker compose up -d` entirely — it is a batch job, not a service, and it
+  # must never be built or started on a normal deploy.
+  #
+  #   docker compose run --rm eval backcat-eval run
+  #   docker compose run --rm eval backcat-eval import-golden
+  #   docker compose run --rm eval backcat-eval build-pool
+  #
+  # ./eval is mounted, so golden_set.json is read from the host and results are
+  # written back to it — nothing of value lives inside the container.
+  eval:
+    build:
+      context: .
+      dockerfile: eval/Dockerfile
+    profiles: ["eval"]
+    env_file:
+      - pipeline/.env
+    environment:
+      DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
+      NEO4J_URI: bolt://neo4j:7687
+    volumes:
+      - ./eval:/app/eval
+      # ~2GB of cross-encoder weights; a named volume so a re-run doesn't
+      # re-download them and the repo stays clean.
+      - hfcache:/root/.cache/huggingface
+    working_dir: /app/eval
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+
   web:
     build:
       context: ./web
@@ -164,3 +196,4 @@ volumes:
   pgdata:
   neo4jdata:
   pipelinedata:
+  hfcache:
