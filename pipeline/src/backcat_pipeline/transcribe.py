@@ -100,8 +100,72 @@ def _segment(path: Path, workdir: Path) -> list[Path]:
     return sorted(workdir.glob("seg_*.mp3"))
 
 
-def transcribe_episode(conn, *, catalog_id: str, episode_id: str, path: Path) -> float:
+def _write_transcript(
+    conn, *, catalog_id: str, episode_id: str, language: str | None,
+    model: str, text: str, words: list[dict], duration_s: float,
+    service: str, rate: float,
+) -> float:
+    hours = duration_s / 3600
+    conn.execute(
+        """
+        INSERT INTO transcripts (episode_id, catalog_id, language, model, text, words, audio_duration_s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (episode_id) DO UPDATE SET
+            language = EXCLUDED.language, model = EXCLUDED.model, text = EXCLUDED.text,
+            words = EXCLUDED.words, audio_duration_s = EXCLUDED.audio_duration_s
+        """,
+        (episode_id, catalog_id, language, model, text, json.dumps(words), duration_s),
+    )
+    conn.execute("UPDATE episodes SET duration_s = %s WHERE id = %s", (int(duration_s), episode_id))
+    log_cost(
+        conn, catalog_id=catalog_id, episode_id=episode_id, service=service,
+        model=model, units=hours, unit_kind="audio_hours", cost_usd=hours * rate,
+    )
+    return hours
+
+
+def transcribe_from_captions(conn, *, catalog_id: str, episode_id: str) -> float | None:
+    from .captions import captions_path, snippets_to_words
+
+    dest = captions_path(episode_id)
+    if not dest.is_file() or dest.stat().st_size == 0:
+        return None
+    payload = json.loads(dest.read_text(encoding="utf-8"))
+    words, text, duration_s = snippets_to_words(payload.get("snippets") or [])
+    if not words:
+        return None
+    kind = "auto" if payload.get("generated") else "manual"
+    lang = payload.get("language") or "und"
+    joblog.log(f"using YouTube captions ({lang} {kind}, {len(words)} words) — skipping Whisper")
+    return _write_transcript(
+        conn, catalog_id=catalog_id, episode_id=episode_id, language=lang,
+        model=f"youtube-captions-{kind}", text=text, words=words, duration_s=duration_s,
+        service="youtube_captions", rate=0.0,
+    )
+
+
+def transcribe_episode(
+    conn, *, catalog_id: str, episode_id: str, path: Path, audio_url: str = "",
+) -> float:
     """Transcribe one episode, upsert the transcript, log cost. Returns audio hours."""
+    captioned = transcribe_from_captions(conn, catalog_id=catalog_id, episode_id=episode_id)
+    if captioned is not None:
+        return captioned
+
+    if not path.is_file() or path.stat().st_size == 0:
+        if audio_url.startswith("youtube:"):
+            from .captions import fetch_youtube_captions, save_captions
+
+            payload = fetch_youtube_captions(audio_url.removeprefix("youtube:"))
+            if payload:
+                save_captions(episode_id, payload)
+                captioned = transcribe_from_captions(conn, catalog_id=catalog_id, episode_id=episode_id)
+                if captioned is not None:
+                    return captioned
+        raise FileNotFoundError(
+            f"no audio at {path} and no YouTube captions — download stage must succeed first"
+        )
+
     model = str(get_config(conn, "model.asr"))
     rate = float(get_config(conn, "asr_usd_per_audio_hour"))
 
@@ -142,20 +206,8 @@ def transcribe_episode(conn, *, catalog_id: str, episode_id: str, path: Path) ->
         if tmpdir is not None:
             tmpdir.cleanup()
 
-    hours = total_duration / 3600
-    conn.execute(
-        """
-        INSERT INTO transcripts (episode_id, catalog_id, language, model, text, words, audio_duration_s)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (episode_id) DO UPDATE SET
-            language = EXCLUDED.language, model = EXCLUDED.model, text = EXCLUDED.text,
-            words = EXCLUDED.words, audio_duration_s = EXCLUDED.audio_duration_s
-        """,
-        (episode_id, catalog_id, language, model, " ".join(texts), json.dumps(words), total_duration),
+    return _write_transcript(
+        conn, catalog_id=catalog_id, episode_id=episode_id, language=language,
+        model=model, text=" ".join(texts), words=words, duration_s=total_duration,
+        service="groq_whisper", rate=rate,
     )
-    conn.execute("UPDATE episodes SET duration_s = %s WHERE id = %s", (int(total_duration), episode_id))
-    log_cost(
-        conn, catalog_id=catalog_id, episode_id=episode_id, service="groq_whisper",
-        model=model, units=hours, unit_kind="audio_hours", cost_usd=hours * rate,
-    )
-    return hours

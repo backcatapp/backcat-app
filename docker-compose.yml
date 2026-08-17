@@ -118,6 +118,9 @@ services:
       # Optional escalation if the cookie jar alone can't clear YouTube's
       # datacenter-IP wall (e.g. http://user:pass@residential-proxy:port).
       YT_DLP_PROXY: ${YT_DLP_PROXY:-}
+      # captions (default) then yt-dlp audio. captions|audio|auto
+      YT_INGEST: ${YT_INGEST:-auto}
+      YT_CAPTION_LANGS: ${YT_CAPTION_LANGS:-fa,en}
     volumes:
       - pipelinedata:/app/pipeline/data
       # Cookie jar lives on the host so refreshing it is one scp, no rebuild.

@@ -178,19 +178,19 @@ def run(
 
     def _download(conn, episode_id: str, audio_url: str) -> str:
         if audio_url.startswith("youtube:"):
-            from .youtube import download_youtube
+            from .youtube import ingest_youtube
 
-            path = download_youtube(episode_id, audio_url.removeprefix("youtube:"))
-        else:
-            path = download_episode(episode_id, audio_url)
-        return f"({path.stat().st_size >> 20}MB)"
+            return ingest_youtube(episode_id, audio_url.removeprefix("youtube:"))
+        path = download_episode(episode_id, audio_url)
+        return f"({path.stat().st_size >> 20}MB audio)"
 
     def _transcribe(conn, episode_id: str, audio_url: str) -> str:
         hours = transcribe_episode(
             conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id,
             path=audio_path(episode_id),
+            audio_url=audio_url,
         )
-        return f"({hours:.2f}h audio)"
+        return f"({hours:.2f}h)"
 
     def _chunk(conn, episode_id: str, audio_url: str) -> str:
         n = chunk_episode(conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id)
