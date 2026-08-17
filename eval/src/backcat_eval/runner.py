@@ -48,7 +48,16 @@ def evaluate_question(conn, question: dict, *, k: int = 5, rerank_pool: int = 30
         "graph+rerank": reranked(graph_pool),
     }
 
-    result = {"id": question["id"], "category": question["category"], "scored": len(scores)}
+    result = {
+        "id": question["id"],
+        "category": question["category"],
+        "scored": len(scores),
+        # What each config actually returned, and the candidate pool behind it.
+        # Kept so a change of ground truth (human judgments) can rescore this run
+        # arithmetically instead of re-paying 40 minutes of cross-encoder time.
+        "ranked_ids": ranked_ids,
+        "pool_ids": sorted(set(_ids(baseline_pool)) | set(_ids(graph_pool))),
+    }
     for name, ids in ranked_ids.items():
         result[name] = {
             "hit@k": hit_at_k(ids, relevant, k),

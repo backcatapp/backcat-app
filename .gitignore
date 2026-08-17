@@ -35,6 +35,9 @@ cookies.txt
 data/
 audio/
 
+# build artifacts (extension bundle is rebuilt from ext/dist)
+*.zip
+
 # os / editor
 .DS_Store
 Thumbs.db

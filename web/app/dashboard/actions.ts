@@ -8,6 +8,7 @@ import { sql } from "@/lib/db";
 async function requireAdmin() {
   const session = await auth();
   if (!session?.roles?.includes("admin")) throw new Error("forbidden: admin role required");
+  return session;
 }
 
 // Mirrors backcat_pipeline.ids.det_id — keep in sync.
@@ -180,6 +181,22 @@ export async function retryFailed(catalogId: string) {
     WHERE catalog_id = ${catalogId} AND status = 'failed'
   `;
   revalidatePath("/dashboard");
+}
+
+// 0 = not relevant, 1 = related but doesn't answer, 2 = answers it.
+// Deliberately no revalidatePath: the panel holds optimistic state while an
+// assessor labels a dozen chunks in a row, and a refresh per keystroke would
+// fight it. Fresh data arrives when they move to the next question.
+export async function saveJudgment(questionId: string, chunkId: string, label: number) {
+  const session = await requireAdmin();
+  if (![0, 1, 2].includes(label)) throw new Error("invalid label");
+  await sql`
+    INSERT INTO eval_judgments (question_id, chunk_id, catalog_id, label, judged_by)
+    SELECT ${questionId}, ${chunkId}, q.catalog_id, ${label}, ${session.user?.email ?? "unknown"}
+    FROM eval_questions q WHERE q.id = ${questionId}
+    ON CONFLICT (question_id, chunk_id) DO UPDATE
+      SET label = EXCLUDED.label, judged_by = EXCLUDED.judged_by, judged_at = now()
+  `;
 }
 
 export async function reindexTranscribe(catalogId: string) {

@@ -1,6 +1,6 @@
 # pipeline/
 
-Python ingestion + indexing CLIs: RSS parse → audio download → batched Whisper (Groq, word timestamps) → time-aligned chunks (60–90s, 15s overlap) → embeddings (pgvector) → LLM extraction → alias canonicalization → Neo4j load.
+Python ingestion + indexing CLIs: RSS/YouTube parse → audio download (yt-dlp) → batched Whisper (Groq, word timestamps) → time-aligned chunks (30–45s, 10s overlap, config-driven) → embeddings (pgvector) → LLM extraction → Neo4j load.
 
 Rules that apply to every stage (see `CLAUDE.md`):
 
@@ -8,4 +8,6 @@ Rules that apply to every stage (see `CLAUDE.md`):
 - Job state = rows in Postgres (`queued → transcribing → chunking → embedding → graphing → live`, attempt counts, `failed` terminal state). No queue framework.
 - Cost + duration logged per episode on every ASR/LLM call.
 
-Starts day 4. See `docs/ARCHITECTURE.md` §1–3.
+Not yet built: alias canonicalization (entities merge on exact name only, so near-duplicates accumulate) and a caption fast-path (every episode pays for a full Whisper pass).
+
+See `docs/ARCHITECTURE.md` §1–3.

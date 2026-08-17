@@ -37,6 +37,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </Link>
         {isAdmin && (
           <>
+            <Link className="dash-nav-link" href="/dashboard/eval">
+              Judge eval
+            </Link>
             <Link className="dash-nav-link" href="/dashboard/users">
               Users
             </Link>

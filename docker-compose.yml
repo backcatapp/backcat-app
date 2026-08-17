@@ -98,7 +98,8 @@ services:
     # migrate + Neo4j constraints on every start — both idempotent (migrate
     # tracks applied files; MERGE-based constraints are a no-op if present).
     command: >
-      sh -c "migrate &&
+      sh -c "python -m backcat_pipeline.wait_postgres &&
+      migrate &&
       python -m backcat_pipeline.wait_neo4j &&
       ingest worker --interval 5"
     env_file:
