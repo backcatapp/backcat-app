@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset='utf-8'><title>recall@5 gains from the graph channel</title><style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1200px; height:675px; background:#16161D;
+  font-family:'Instrument Sans','Segoe UI',system-ui,sans-serif; padding:48px 56px;
+  display:flex; flex-direction:column;
+}
+.eyebrow {
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:13px; letter-spacing:.14em;
+  text-transform:uppercase; color:#6E6E78; margin-bottom:14px;
+}
+h1 { font-size:38px; font-weight:700; color:#F3F2EE; letter-spacing:-.02em; line-height:1.15; }
+.sub { font-size:17px; color:#C9C9CF; margin-top:10px; }
+.plot { flex:1; display:flex; flex-direction:column; justify-content:center; gap:18px; margin:30px 0 0; }
+.row { display:flex; align-items:center; gap:18px; }
+.label { width:250px; text-align:right; font-size:17px; color:#C9C9CF; flex-shrink:0; }
+.label b { color:#F3F2EE; font-weight:600; }
+.track { flex:1; position:relative; height:38px; background:#1F1F28; border-radius:8px; }
+.bar { position:absolute; left:0; top:0; bottom:0; border-radius:8px; }
+.value {
+  width:150px; font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:22px; color:#F3F2EE;
+  flex-shrink:0; display:flex; align-items:baseline; gap:10px;
+}
+.delta { font-size:14px; color:#6E6E78; }
+.delta.up { color:#FF8A3D; }
+.gate { position:absolute; top:-9px; bottom:-9px; width:0; border-left:2px dashed #E8B03E; }
+.gate span {
+  position:absolute; top:-24px; left:8px; white-space:nowrap;
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:12px; color:#E8B03E;
+}
+.axis { display:flex; gap:18px; margin-top:6px; }
+.axis .label { width:250px; }
+.axis .ticks { flex:1; display:flex; justify-content:space-between;
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:12px; color:#6E6E78; }
+.axis .pad { width:150px; flex-shrink:0; }
+footer {
+  margin-top:26px; padding-top:18px; border-top:1px solid #2C2C36;
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:13px; color:#6E6E78;
+}
+footer b { color:#C9C9CF; font-weight:500; }
+.grp { display:flex; flex-direction:column; gap:9px; }
+.grp + .grp { margin-top:26px; }
+.grp .cat { font-size:15px; color:#F3F2EE; font-weight:600; margin-bottom:2px; }
+</style></head><body><div class='eyebrow'>Backcat · retrieval benchmark</div><h1>Where the graph earns its place</h1><div class='sub'>recall@5 — the graph finds chunks dense and keyword search both miss</div><div class='plot' style='justify-content:center'><div class='grp'><div class='cat'>multi-hop questions &nbsp;<span style='color:#6E6E78;font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace;font-size:13px;font-weight:400'>n=25</span></div><div class='row'><div class='label'>dense + BM25</div><div class='track'><div class='bar' style='width:38.1%;background:#6E6E78'></div></div><div class='value'>0.38</div></div><div class='row'><div class='label'><b>+ knowledge graph</b></div><div class='track'><div class='bar' style='width:58.1%;background:#FF8A3D'></div></div><div class='value'>0.58 <span class='delta up'>+20 pts</span></div></div></div><div class='grp'><div class='cat'>temporal questions &nbsp;<span style='color:#6E6E78;font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace;font-size:13px;font-weight:400'>n=10</span></div><div class='row'><div class='label'>dense + BM25</div><div class='track'><div class='bar' style='width:51.7%;background:#6E6E78'></div></div><div class='value'>0.52</div></div><div class='row'><div class='label'><b>+ knowledge graph</b></div><div class='track'><div class='bar' style='width:80.0%;background:#FF8A3D'></div></div><div class='value'>0.80 <span class='delta up'>+28 pts</span></div></div></div><div class='axis' style='margin-top:16px'><div class='label'></div><div class='ticks'><span>0.00</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.00</span></div><div class='pad'></div></div></div><footer><span>small samples — read as directional, not conclusive</span><span><b>graph channel, no reranker</b></span></footer></body></html>

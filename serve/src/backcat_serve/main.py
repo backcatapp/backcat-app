@@ -307,7 +307,7 @@ def concept_chunks_endpoint(uid: str, episode_id: str | None = None):
     with connect() as conn:
         db_rows = conn.execute(
             """
-            SELECT c.id, e.title, e.source_url, c.start_s, c.end_s, c.text
+            SELECT c.id, e.title, e.source_url, c.start_s, c.end_s, c.text, e.id
             FROM chunks c JOIN episodes e ON e.id = c.episode_id
             WHERE c.id = ANY(%s)
             ORDER BY e.title, c.start_s
@@ -318,7 +318,7 @@ def concept_chunks_endpoint(uid: str, episode_id: str | None = None):
         "moments": [
             {
                 "episode": r[1], "source_url": r[2], "start_s": float(r[3]),
-                "end_s": float(r[4]), "text": r[5],
+                "end_s": float(r[4]), "text": r[5], "episode_id": r[6],
             }
             for r in db_rows
         ]

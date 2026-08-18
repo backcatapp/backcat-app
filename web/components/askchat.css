@@ -50,13 +50,35 @@
   gap: 8px;
 }
 
-.chat-empty-tags span {
+.chat-empty-tags span,
+.chat-prompt {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   color: var(--dim);
   border: 1px solid var(--line-2);
   border-radius: 999px;
   padding: 5px 12px;
+}
+
+.chat-prompt {
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--font-instrument), system-ui, sans-serif;
+  font-size: 13px;
+  padding: 8px 14px;
+  text-align: start;
+  max-width: 100%;
+}
+
+.chat-prompt:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--orange);
+}
+
+.chat-prompt:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ---------- messages ---------- */

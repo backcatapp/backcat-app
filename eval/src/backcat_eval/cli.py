@@ -64,6 +64,82 @@ def run_cmd(
     typer.echo(f"wrote {len(results)} results to {out}")
 
 
+@app.command(name="import-golden")
+def import_golden(golden_set: Path = typer.Option(DEFAULT_GOLDEN_SET, "--golden-set")) -> None:
+    """Load the golden set into Postgres so the dashboard can queue it for judging."""
+    from .human import import_golden_set
+
+    questions = json.loads(golden_set.read_text(encoding="utf-8"))
+    with connect() as conn:
+        n = import_golden_set(conn, questions)
+        conn.commit()
+    typer.echo(f"imported {n} questions into eval_questions")
+
+
+@app.command(name="build-pool")
+def build_pool_cmd(
+    results: Path = typer.Option(DEFAULT_RESULTS, "--results"),
+    golden_set: Path = typer.Option(DEFAULT_GOLDEN_SET, "--golden-set"),
+    k: int = typer.Option(5, "--k"),
+) -> None:
+    """Turn a benchmark run into a judging queue (needs a run with ranked_ids)."""
+    from .human import build_pool
+
+    data = json.loads(results.read_text(encoding="utf-8"))
+    if not any("ranked_ids" in r for r in data):
+        raise typer.BadParameter(
+            f"{results.name} predates ranked_ids — re-run `backcat-eval run` to record them"
+        )
+    golden = {q["id"]: q for q in json.loads(golden_set.read_text(encoding="utf-8"))}
+    with connect() as conn:
+        n = build_pool(conn, data, golden, k=k)
+        conn.commit()
+    typer.echo(f"pooled {n} (question, chunk) pairs — judge them at /dashboard/eval")
+
+
+@app.command()
+def rescore(
+    results: Path = typer.Option(DEFAULT_RESULTS, "--results"),
+    k: int = typer.Option(5, "--k"),
+    threshold: int = typer.Option(2, "--threshold", help="min label to count as relevant (0-2)"),
+) -> None:
+    """Rescore a finished run against human labels instead of the generated key."""
+    from .human import agreement, judged_questions, load_judgments
+    from .human import rescore as rescore_results
+    from .runner import CONFIGS, summarize
+
+    data = json.loads(results.read_text(encoding="utf-8"))
+    with connect() as conn:
+        truth = load_judgments(conn, threshold=threshold)
+        scorable = judged_questions(conn)
+        overlap = agreement(conn)
+
+    scored = rescore_results(data, truth, scorable, k=k)
+    if not scored:
+        typer.echo("no judged questions yet — label some at /dashboard/eval first")
+        raise typer.Exit(1)
+
+    summary = summarize(scored)
+    lines = ["| category | n | " + " | ".join(f"{c} hit@k / mrr / recall@k" for c in CONFIGS) + " |"]
+    lines.append("|---" * (2 + len(CONFIGS)) + "|")
+    for cat, row in summary.items():
+        cells = [
+            f"{row[cfg]['hit@k']:.2f} / {row[cfg]['mrr']:.2f} / {row[cfg]['recall@k']:.2f}"
+            for cfg in CONFIGS
+        ]
+        lines.append(f"| {cat} | {row['n']} | " + " | ".join(cells) + " |")
+    typer.echo("\n".join(lines))
+    typer.echo(
+        f"\nscored on {len(scored)}/{len(data)} questions that have human labels"
+        f"\ngenerated key agreed with human: {overlap['agreed_relevant']}"
+        f" · generated but judged irrelevant: {overlap['generated_but_not_relevant']}"
+        f" · relevant but missing from the generated key: {overlap['relevant_but_missed']}"
+    )
+    out = results.with_name(results.stem + "_human.md")
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    typer.echo(f"saved to {out}")
+
+
 @app.command()
 def report(results: Path = typer.Option(DEFAULT_RESULTS, "--results")) -> None:
     """Print (and save as .md) the per-category results table."""

@@ -65,16 +65,29 @@ def dense_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
 
 
 def keyword_search(conn, catalog_id: str, query: str, k: int = 20) -> list[Hit]:
+    """Keyword channel, OR-matched and ranked by cover density.
+
+    A fan question is a sentence, not a search box: `websearch_to_tsquery` ANDs
+    every term, and no 30-45s chunk contains all 13+ words of one. That returned
+    zero rows for all 88 golden questions — the "hybrid" baseline was dense-only.
+    Lexing the query with the same config as `chunks.tsv` and OR-ing the lexemes
+    makes this a ranking problem (ts_rank_cd) instead of a filter that never passes.
+    """
     rows = conn.execute(
         _SELECT
         + """
         FROM chunks c
-        JOIN episodes e ON e.id = c.episode_id
-        WHERE c.catalog_id = %s AND c.tsv @@ websearch_to_tsquery('english', %s)
-        ORDER BY ts_rank_cd(c.tsv, websearch_to_tsquery('english', %s)) DESC
+        JOIN episodes e ON e.id = c.episode_id,
+        LATERAL (
+            SELECT NULLIF(
+                array_to_string(tsvector_to_array(to_tsvector('english', %s)), ' | '), ''
+            )::tsquery AS tsq
+        ) q
+        WHERE c.catalog_id = %s AND q.tsq IS NOT NULL AND c.tsv @@ q.tsq
+        ORDER BY ts_rank_cd(c.tsv, q.tsq) DESC, c.id
         LIMIT %s
         """,
-        (catalog_id, query, query, k),
+        (query, catalog_id, k),
     ).fetchall()
     return [Hit(r[0], r[1], r[2], float(r[3]), float(r[4]), r[5], r[6]) for r in rows]
 

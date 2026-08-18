@@ -1,35 +1,62 @@
 .fan {
+  --fan-max: 1080px;
+  position: relative;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 20px;
+  padding: 0 22px 48px;
+  overflow-x: hidden;
 }
 
-.fan-inner {
+.fan-grid {
+  pointer-events: none;
+  position: absolute;
+  inset: 0 0 40%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  opacity: 0.18;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+}
+
+.fan-grid i {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.fan-top,
+.fan-hero,
+.fan-chat,
+.fan-section,
+.fan-foot {
+  position: relative;
   width: 100%;
-  max-width: 720px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  max-width: var(--fan-max);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .fan-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
+  gap: 12px;
+  padding: 22px 0 8px;
 }
 
 .fan-wordmark {
   font-family: var(--font-bricolage), sans-serif;
   font-weight: 800;
-  font-size: 17px;
+  font-size: 18px;
   color: var(--ink);
 }
 
 .fan-wordmark span {
   color: var(--orange);
+}
+
+.fan-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .fan-live {
@@ -49,61 +76,254 @@
   height: 6px;
   border-radius: 50%;
   background: #2fa68c;
+  box-shadow: 0 0 8px #2fa68c;
+}
+
+.fan-share {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--orange-ink);
+  background: var(--orange);
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.fan-share:hover {
+  transform: translateY(-1px);
 }
 
 .fan-hero {
-  padding: 48px 0 36px;
-  text-align: center;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 36px;
+  align-items: center;
+  padding: 36px 0 28px;
 }
 
 .fan-kicker {
-  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--dim);
-  margin-bottom: 14px;
+  margin: 0 0 12px;
 }
 
 .fan-hero h1 {
   font-family: var(--font-bricolage), sans-serif;
-  font-size: clamp(30px, 5.4vw, 44px);
+  font-size: clamp(32px, 5vw, 56px);
   font-weight: 800;
-  line-height: 1.12;
+  line-height: 1.08;
   margin: 0 0 14px;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
-.fan-hero h1 em {
-  color: var(--orange);
-  font-style: normal;
-}
-
-.fan-hero p {
+.fan-hero-copy p {
   color: var(--muted);
   font-size: 16px;
   line-height: 1.7;
-  max-width: 480px;
-  margin: 0 auto;
+  max-width: 520px;
+  margin: 0;
 }
 
 .fan-stats {
   display: flex;
-  justify-content: center;
   gap: 22px;
-  margin-top: 22px;
+  margin-top: 28px;
+}
+
+.fan-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fan-stats b {
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: 28px;
+  color: var(--orange);
+  line-height: 1;
+}
+
+.fan-stats span {
   font-family: var(--font-mono), monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--dim);
 }
 
-.fan-chat {
+.fan-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.fan-cta-ask {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 20px;
+  font-size: 14px;
+}
+
+.fan-cta .btn-ghost-landing {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+.fan-hero-visual {
+  position: relative;
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+
+.fan-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 160px;
+  width: min(100%, 280px);
+}
+
+.fan-eq span {
   flex: 1;
-  padding-bottom: 24px;
+  border-radius: 8px 8px 3px 3px;
+  min-height: 12px;
+  animation: bc-eq 1.8s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.fan-cat {
+  position: absolute;
+  right: 6%;
+  bottom: 18px;
+  width: 92px;
+  height: auto;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+  animation: bc-float 4.5s ease-in-out infinite;
+}
+
+.fan-card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(31, 31, 40, 0.75), rgba(22, 22, 29, 0.9));
+  padding: 22px 22px 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+.fan-card-kicker {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 14px;
+}
+
+.fan-chat {
+  padding-bottom: 12px;
+}
+
+.fan-chat .chat-empty {
+  border: 0;
+  background: transparent;
+  padding: 28px 8px 12px;
+}
+
+.fan-section {
+  padding: 36px 0 8px;
+}
+
+.fan-section-h {
+  margin-bottom: 18px;
+}
+
+.fan-section-h h2 {
+  font-family: var(--font-bricolage), sans-serif;
+  font-size: clamp(22px, 3vw, 28px);
+  margin: 0 0 6px;
+}
+
+.fan-section-h p {
+  margin: 0;
+  color: var(--dim);
+  font-size: 14px;
+}
+
+.fan-concepts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fan-concept {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 999px;
+  color: var(--ink);
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.fan-concept:hover {
+  border-color: var(--orange);
+  color: var(--ink);
+}
+
+.fan-concept i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.fan-eps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fan-ep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(31, 31, 40, 0.5);
+  padding: 12px 14px;
+  color: var(--ink);
+}
+
+a.fan-ep:hover {
+  border-color: var(--line-2);
+  color: var(--ink);
+}
+
+.fan-ep-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.fan-graph-card {
+  padding: 16px;
 }
 
 .fan-foot {
-  padding: 20px 0 28px;
+  padding: 36px 0 8px;
   text-align: center;
   font-size: 12px;
   color: var(--dim);
@@ -115,4 +335,52 @@
 
 .fan-foot a:hover {
   color: var(--orange);
+}
+
+@media (max-width: 860px) {
+  .fan {
+    padding: 0 14px 36px;
+  }
+
+  .fan-hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 20px 0 12px;
+  }
+
+  .fan-hero-visual {
+    min-height: 140px;
+    order: -1;
+  }
+
+  .fan-eq {
+    height: 110px;
+    width: min(100%, 220px);
+  }
+
+  .fan-cat {
+    width: 64px;
+    right: 4%;
+  }
+
+  .fan-stats {
+    gap: 16px;
+  }
+
+  .fan-stats b {
+    font-size: 22px;
+  }
+
+  .fan-live {
+    display: none;
+  }
+
+  .fan-card {
+    padding: 14px 12px 12px;
+    border-radius: 18px;
+  }
+
+  .fan-ep-title {
+    white-space: normal;
+  }
 }

@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset='utf-8'><title>hit@5 by configuration</title><style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1200px; height:675px; background:#16161D;
+  font-family:'Instrument Sans','Segoe UI',system-ui,sans-serif; padding:48px 56px;
+  display:flex; flex-direction:column;
+}
+.eyebrow {
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:13px; letter-spacing:.14em;
+  text-transform:uppercase; color:#6E6E78; margin-bottom:14px;
+}
+h1 { font-size:38px; font-weight:700; color:#F3F2EE; letter-spacing:-.02em; line-height:1.15; }
+.sub { font-size:17px; color:#C9C9CF; margin-top:10px; }
+.plot { flex:1; display:flex; flex-direction:column; justify-content:center; gap:18px; margin:30px 0 0; }
+.row { display:flex; align-items:center; gap:18px; }
+.label { width:250px; text-align:right; font-size:17px; color:#C9C9CF; flex-shrink:0; }
+.label b { color:#F3F2EE; font-weight:600; }
+.track { flex:1; position:relative; height:38px; background:#1F1F28; border-radius:8px; }
+.bar { position:absolute; left:0; top:0; bottom:0; border-radius:8px; }
+.value {
+  width:150px; font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:22px; color:#F3F2EE;
+  flex-shrink:0; display:flex; align-items:baseline; gap:10px;
+}
+.delta { font-size:14px; color:#6E6E78; }
+.delta.up { color:#FF8A3D; }
+.gate { position:absolute; top:-9px; bottom:-9px; width:0; border-left:2px dashed #E8B03E; }
+.gate span {
+  position:absolute; top:-24px; left:8px; white-space:nowrap;
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:12px; color:#E8B03E;
+}
+.axis { display:flex; gap:18px; margin-top:6px; }
+.axis .label { width:250px; }
+.axis .ticks { flex:1; display:flex; justify-content:space-between;
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:12px; color:#6E6E78; }
+.axis .pad { width:150px; flex-shrink:0; }
+footer {
+  margin-top:26px; padding-top:18px; border-top:1px solid #2C2C36;
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace; font-size:13px; color:#6E6E78;
+}
+footer b { color:#C9C9CF; font-weight:500; }
+.grp { display:flex; flex-direction:column; gap:9px; }
+.grp + .grp { margin-top:26px; }
+.grp .cat { font-size:15px; color:#F3F2EE; font-weight:600; margin-bottom:2px; }
+</style></head><body><div class='eyebrow'>Backcat · retrieval benchmark</div><h1>The knowledge graph made retrieval worse.<br>The reranker fixed it.</h1><div class='sub'>hit@5 over 88 golden questions, four retrieval configurations</div><div class='plot'><div class='row'><div class='label'><b>dense + BM25</b></div><div class='track'><div class='bar' style='width:46.97%;background:#6E6E78'></div><div class='gate' style='left:50.00%'><span>0.85 quality bar</span></div></div><div class='value'>0.841 <span class='delta'>baseline</span></div></div><div class='row'><div class='label'><b>+ knowledge graph</b></div><div class='track'><div class='bar' style='width:39.39%;background:#6E6E78'></div><div class='gate' style='left:50.00%'></div></div><div class='value'>0.818 <span class='delta'>-2.3 pts</span></div></div><div class='row'><div class='label'><b>+ reranker</b></div><div class='track'><div class='bar' style='width:84.85%;background:#FF8A3D'></div><div class='gate' style='left:50.00%'></div></div><div class='value'>0.955 <span class='delta up'>+11.4 pts</span></div></div><div class='row'><div class='label'><b>graph + reranker</b></div><div class='track'><div class='bar' style='width:92.42%;background:#FF8A3D'></div><div class='gate' style='left:50.00%'></div></div><div class='value'>0.977 <span class='delta up'>+13.6 pts</span></div></div><div class='axis'><div class='label'></div><div class='ticks'><span>0.70</span><span>0.80</span><span>0.90</span><span>1.00</span></div><div class='pad'></div></div></div><footer><span>12 episodes · 3.07 audio-hours · one catalog · bge-reranker-v2-m3</span><span><b>axis starts at 0.70</b></span></footer></body></html>

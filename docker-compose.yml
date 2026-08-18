@@ -2,6 +2,10 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: backcat-postgres
+    # unless-stopped everywhere: a host reboot or a transient crash must not
+    # leave the stack down until someone notices. The worker sat dead for two
+    # days on a startup race precisely because nothing brought it back.
+    restart: unless-stopped
     environment:
       POSTGRES_USER: backcat
       POSTGRES_PASSWORD: backcat
@@ -19,6 +23,7 @@ services:
   neo4j:
     image: neo4j:5-community
     container_name: backcat-neo4j
+    restart: unless-stopped
     environment:
       NEO4J_AUTH: neo4j/backcatdev
       NEO4J_server_memory_heap_initial__size: 512m
@@ -41,6 +46,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.4
     container_name: backcat-keycloak
+    restart: unless-stopped
     command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
@@ -68,6 +74,7 @@ services:
       context: .
       dockerfile: pipeline/Dockerfile
     container_name: backcat-serve
+    restart: unless-stopped
     command: uvicorn backcat_serve.main:app --host 0.0.0.0 --port 8000
     working_dir: /app/serve
     env_file:
@@ -95,10 +102,12 @@ services:
       context: .
       dockerfile: pipeline/Dockerfile
     container_name: backcat-worker
+    restart: unless-stopped
     # migrate + Neo4j constraints on every start — both idempotent (migrate
     # tracks applied files; MERGE-based constraints are a no-op if present).
     command: >
-      sh -c "migrate &&
+      sh -c "python -m backcat_pipeline.wait_postgres &&
+      migrate &&
       python -m backcat_pipeline.wait_neo4j &&
       ingest worker --interval 5"
     env_file:
@@ -106,8 +115,49 @@ services:
     environment:
       DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
       NEO4J_URI: bolt://neo4j:7687
+      # Optional escalation if the cookie jar alone can't clear YouTube's
+      # datacenter-IP wall (e.g. http://user:pass@residential-proxy:port).
+      YT_DLP_PROXY: ${YT_DLP_PROXY:-}
+      # captions (default) then yt-dlp audio. captions|audio|auto
+      YT_INGEST: ${YT_INGEST:-auto}
+      YT_CAPTION_LANGS: ${YT_CAPTION_LANGS:-fa,en}
     volumes:
       - pipelinedata:/app/pipeline/data
+      # Cookie jar lives on the host so refreshing it is one scp, no rebuild.
+      # Read-write: yt-dlp persists YouTube's rotated session cookies back.
+      - ./infra/yt-dlp:/app/pipeline/yt-dlp
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+
+  # One-off eval harness (day 10). `profiles: ["eval"]` keeps it out of
+  # `docker compose up -d` entirely — it is a batch job, not a service, and it
+  # must never be built or started on a normal deploy.
+  #
+  #   docker compose run --rm eval backcat-eval run
+  #   docker compose run --rm eval backcat-eval import-golden
+  #   docker compose run --rm eval backcat-eval build-pool
+  #
+  # ./eval is mounted, so golden_set.json is read from the host and results are
+  # written back to it — nothing of value lives inside the container.
+  eval:
+    build:
+      context: .
+      dockerfile: eval/Dockerfile
+    profiles: ["eval"]
+    env_file:
+      - pipeline/.env
+    environment:
+      DATABASE_URL: postgresql://backcat:backcat@postgres:5432/backcat
+      NEO4J_URI: bolt://neo4j:7687
+    volumes:
+      - ./eval:/app/eval
+      # ~2GB of cross-encoder weights; a named volume so a re-run doesn't
+      # re-download them and the repo stays clean.
+      - hfcache:/root/.cache/huggingface
+    working_dir: /app/eval
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +170,7 @@ services:
       args:
         NEXT_PUBLIC_SERVE_URL: http://${PUBLIC_HOST:-localhost}:8000
     container_name: backcat-web
+    restart: unless-stopped
     # Prefer env-specific file; fall back to .env.local for either.
     # Compose v2.24+: required: false. If your compose is older, keep only
     # web/.env.local and copy from the matching *.example.
@@ -148,3 +199,4 @@ volumes:
   pgdata:
   neo4jdata:
   pipelinedata:
+  hfcache:

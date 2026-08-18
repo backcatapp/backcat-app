@@ -93,11 +93,14 @@ export default function AskChat({
   catalogId,
   placeholder = "Ask anything about this catalog…",
   showTranscripts = false,
+  prompts,
 }: {
   catalogId: string;
   placeholder?: string;
   /** Testing aid (dashboard only): show each moment's transcript text. */
   showTranscripts?: boolean;
+  /** Starter questions shown in the empty state (public profile). */
+  prompts?: string[];
 }) {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [input, setInput] = useState("");
@@ -118,9 +121,8 @@ export default function AskChat({
     if (busy) endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [answers.length, busy]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const question = input.trim();
+  const ask = async (raw: string) => {
+    const question = raw.trim();
     if (!question || busy) return;
     setInput("");
     setBusy(true);
@@ -141,6 +143,11 @@ export default function AskChat({
     }
   };
 
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await ask(input);
+  };
+
   const activate = (answerIdx: number, i: number) => {
     const src = answers[answerIdx]?.sources.find((s) => s.i === i);
     if (src && youtubeId(src.source_url)) {
@@ -151,7 +158,7 @@ export default function AskChat({
   };
 
   return (
-    <div className="chat">
+    <div className="chat" id="ask">
       <div className="chat-thread">
         {answers.length === 0 && (
           <div className="chat-empty">
@@ -162,11 +169,21 @@ export default function AskChat({
               Answers come from the actual episodes — every claim cited to the exact second, with
               the moment playable right here.
             </p>
-            <div className="chat-empty-tags">
-              <span>grounded only</span>
-              <span>cited to the second</span>
-              <span>honest when not covered</span>
-            </div>
+            {prompts && prompts.length > 0 ? (
+              <div className="chat-empty-tags">
+                {prompts.map((p) => (
+                  <button key={p} type="button" className="chat-prompt" onClick={() => ask(p)} disabled={busy}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="chat-empty-tags">
+                <span>grounded only</span>
+                <span>cited to the second</span>
+                <span>honest when not covered</span>
+              </div>
+            )}
           </div>
         )}
         {answers.map((a, idx) => {

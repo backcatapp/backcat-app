@@ -88,6 +88,15 @@ def add_local(
 
 
 def _claim_jobs(conn, catalog: str, stage: str, episode: str | None) -> list[tuple]:
+    """Queued jobs for a stage, gated on the previous stage being done.
+
+    Without the gate, a transcribe that is still running (or was interrupted)
+    lets chunk/embed/graph spend their whole retry budget on "prerequisite
+    missing" within a few poll cycles and land in `failed` — three bogus
+    failures a human has to Retry, masking the one real problem.
+    """
+    idx = STAGES.index(stage)
+    prev_stage = STAGES[idx - 1] if idx else None
     return conn.execute(
         """
         SELECT j.id, j.episode_id, e.audio_url
@@ -97,9 +106,15 @@ def _claim_jobs(conn, catalog: str, stage: str, episode: str | None) -> list[tup
         WHERE (c.id = %s OR c.name = %s) AND c.paused = FALSE
           AND j.stage = %s AND j.status = 'queued'
           AND (%s::text IS NULL OR j.episode_id = %s)
+          AND (%s::text IS NULL OR NOT EXISTS (
+                SELECT 1 FROM jobs prev
+                WHERE prev.episode_id = j.episode_id
+                  AND prev.stage = %s
+                  AND prev.status <> 'done'
+              ))
         ORDER BY e.published_at NULLS LAST
         """,
-        (catalog, catalog, stage, episode, episode),
+        (catalog, catalog, stage, episode, episode, prev_stage, prev_stage),
     ).fetchall()
 
 
@@ -163,19 +178,19 @@ def run(
 
     def _download(conn, episode_id: str, audio_url: str) -> str:
         if audio_url.startswith("youtube:"):
-            from .youtube import download_youtube
+            from .youtube import ingest_youtube
 
-            path = download_youtube(episode_id, audio_url.removeprefix("youtube:"))
-        else:
-            path = download_episode(episode_id, audio_url)
-        return f"({path.stat().st_size >> 20}MB)"
+            return ingest_youtube(episode_id, audio_url.removeprefix("youtube:"))
+        path = download_episode(episode_id, audio_url)
+        return f"({path.stat().st_size >> 20}MB audio)"
 
     def _transcribe(conn, episode_id: str, audio_url: str) -> str:
         hours = transcribe_episode(
             conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id,
             path=audio_path(episode_id),
+            audio_url=audio_url,
         )
-        return f"({hours:.2f}h audio)"
+        return f"({hours:.2f}h)"
 
     def _chunk(conn, episode_id: str, audio_url: str) -> str:
         n = chunk_episode(conn, catalog_id=_catalog_of(conn, episode_id), episode_id=episode_id)
