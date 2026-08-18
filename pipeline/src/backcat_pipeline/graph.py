@@ -157,76 +157,108 @@ def write_categories(
         s.run("MATCH (c:Category) WHERE NOT ()-[:ABOUT]->(c) DETACH DELETE c")
 
 
+def _listed_episodes(session, catalog_id: str) -> list[dict]:
+    """Episodes in this catalog that actually have graph mentions — for filters."""
+    return session.run(
+        """
+        MATCH (ch:Chunk {catalog_id: $cid})-[:PART_OF]->(e:Episode)
+        OPTIONAL MATCH (n)-[:MENTIONED_IN]->(ch)
+        WHERE n:Concept OR n:Person OR n:Resource
+        WITH e, count(DISTINCT n) AS concepts
+        WHERE concepts > 0
+        RETURN e.id AS id, e.title AS title, concepts
+        ORDER BY e.title
+        """,
+        cid=catalog_id,
+    ).data()
+
+
+def _normalize_nodes(nodes: list[dict]) -> None:
+    """Flatten Cypher episode_refs into ids/titles/primary for the visualizer."""
+    for n in nodes:
+        refs = [r for r in (n.pop("episode_refs", None) or []) if r and r.get("id")]
+        seen: set[str] = set()
+        ordered: list[dict] = []
+        for r in refs:
+            eid = r["id"]
+            if eid in seen:
+                continue
+            seen.add(eid)
+            ordered.append(
+                {
+                    "id": eid,
+                    "title": r.get("title") or "",
+                    "mentions": int(r.get("mentions") or 0),
+                }
+            )
+        n["episode_ids"] = [r["id"] for r in ordered]
+        n["episode_titles"] = [r["title"] for r in ordered if r["title"]]
+        n["primary_episode"] = ordered[0]["id"] if ordered else None
+
+
 def catalog_graph(catalog_id: str, limit: int = 120, episode_id: str | None = None) -> dict:
     """Nodes (entities w/ mention counts) + links (chunk co-occurrence).
 
     When episode_id is set, only entities mentioned in that episode's chunks.
+    Each entity carries episode_ids / episode_titles / primary_episode so the
+    visualizer can color and filter by episode — not only after a click.
     """
+    chunk_pat = (
+        "Chunk {catalog_id: $cid, episode_id: $eid}" if episode_id else "Chunk {catalog_id: $cid}"
+    )
+    params: dict = {"cid": catalog_id, "limit": limit}
+    if episode_id:
+        params["eid"] = episode_id
+
     with get_driver().session() as s:
+        nodes = s.run(
+            f"""
+            MATCH (n)-[:MENTIONED_IN]->(ch:{chunk_pat})
+            WHERE {_ENTITY}
+            OPTIONAL MATCH (ch)-[:PART_OF]->(e:Episode)
+            WITH n, e, count(ch) AS m
+            ORDER BY m DESC
+            WITH n,
+                 [x IN collect({{id: e.id, title: e.title, mentions: m}}) WHERE x.id IS NOT NULL][0..8]
+                   AS episode_refs,
+                 sum(m) AS mentions
+            ORDER BY mentions DESC LIMIT $limit
+            RETURN n.uid AS id, n.name AS name, labels(n)[0] AS label,
+                   mentions, size(episode_refs) AS episodes, episode_refs
+            """,
+            **params,
+        ).data()
+        ids = [n["id"] for n in nodes]
+        links = s.run(
+            f"""
+            MATCH (a)-[:MENTIONED_IN]->(ch:{chunk_pat})<-[:MENTIONED_IN]-(b)
+            WHERE a.uid IN $ids AND b.uid IN $ids AND a.uid < b.uid
+            RETURN a.uid AS source, b.uid AS target, count(DISTINCT ch) AS weight
+            ORDER BY weight DESC LIMIT 500
+            """,
+            **params, ids=ids,
+        ).data()
         if episode_id:
-            nodes = s.run(
-                f"""
-                MATCH (n)-[:MENTIONED_IN]->(ch:Chunk {{catalog_id: $cid, episode_id: $eid}})
-                WHERE {_ENTITY}
-                WITH n, count(DISTINCT ch) AS mentions,
-                     count(DISTINCT ch.episode_id) AS episodes
-                ORDER BY mentions DESC LIMIT $limit
-                RETURN n.uid AS id, n.name AS name, labels(n)[0] AS label,
-                       mentions, episodes
-                """,
-                cid=catalog_id, eid=episode_id, limit=limit,
-            ).data()
-            ids = [n["id"] for n in nodes]
-            links = s.run(
-                f"""
-                MATCH (a)-[:MENTIONED_IN]->(ch:Chunk {{catalog_id: $cid, episode_id: $eid}})
-                      <-[:MENTIONED_IN]-(b)
-                WHERE a.uid IN $ids AND b.uid IN $ids AND a.uid < b.uid
-                RETURN a.uid AS source, b.uid AS target, count(DISTINCT ch) AS weight
-                ORDER BY weight DESC LIMIT 500
-                """,
-                cid=catalog_id, eid=episode_id, ids=ids,
-            ).data()
             cats = s.run(
                 """
                 MATCH (c:Category {catalog_id: $cid})-[:INCLUDES {episode_id: $eid}]->(n)
                 WHERE n.uid IN $ids
                 WITH c, collect(DISTINCT n.uid) AS children
                 RETURN c.uid AS id, c.name AS name, 'Category' AS label,
-                       size(children) AS mentions, 0 AS episodes, children
+                       size(children) AS mentions, 0 AS episodes, children,
+                       [] AS episode_refs
                 """,
                 cid=catalog_id, eid=episode_id, ids=ids,
             ).data()
         else:
-            nodes = s.run(
-                f"""
-                MATCH (n)-[:MENTIONED_IN]->(ch:Chunk {{catalog_id: $cid}})
-                WHERE {_ENTITY}
-                WITH n, count(DISTINCT ch) AS mentions,
-                     count(DISTINCT ch.episode_id) AS episodes
-                ORDER BY mentions DESC LIMIT $limit
-                RETURN n.uid AS id, n.name AS name, labels(n)[0] AS label,
-                       mentions, episodes
-                """,
-                cid=catalog_id, limit=limit,
-            ).data()
-            ids = [n["id"] for n in nodes]
-            links = s.run(
-                f"""
-                MATCH (a)-[:MENTIONED_IN]->(ch:Chunk {{catalog_id: $cid}})<-[:MENTIONED_IN]-(b)
-                WHERE a.uid IN $ids AND b.uid IN $ids AND a.uid < b.uid
-                RETURN a.uid AS source, b.uid AS target, count(DISTINCT ch) AS weight
-                ORDER BY weight DESC LIMIT 500
-                """,
-                cid=catalog_id, ids=ids,
-            ).data()
             cats = s.run(
                 """
                 MATCH (c:Category {catalog_id: $cid})-[:INCLUDES]->(n)
                 WHERE n.uid IN $ids
                 WITH c, collect(DISTINCT n.uid) AS children
                 RETURN c.uid AS id, c.name AS name, 'Category' AS label,
-                       size(children) AS mentions, 0 AS episodes, children
+                       size(children) AS mentions, 0 AS episodes, children,
+                       [] AS episode_refs
                 """,
                 cid=catalog_id, ids=ids,
             ).data()
@@ -235,7 +267,14 @@ def catalog_graph(catalog_id: str, limit: int = 120, episode_id: str | None = No
             nodes.append(c)
             for ch in children:
                 links.append({"source": c["id"], "target": ch, "weight": 1, "kind": "includes"})
-    return {"nodes": nodes, "links": links, "episode_id": episode_id}
+        _normalize_nodes(nodes)
+        episodes = _listed_episodes(s, catalog_id)
+    return {
+        "nodes": nodes,
+        "links": links,
+        "episode_id": episode_id,
+        "episodes": episodes,
+    }
 
 
 def concept_chunks(uid: str, limit: int = 30, episode_id: str | None = None) -> list[dict]:
